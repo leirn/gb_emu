@@ -44,6 +44,8 @@ pub struct Cartridge {
 
 impl Cartridge {
     pub fn load(cartridge: String) -> Cartridge {
+        let header_space = [0_u8; 0x150];
+
         Cartridge {
             title: String::new(),
             model: CartrigeModels::RomOnly,
