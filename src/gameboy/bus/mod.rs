@@ -20,11 +20,18 @@ const BOOT_SEQUENCE: [u8; BOOT_SEQUENCE_SIZE] = [
 
 use crate::gameboy::ppu::Ppu;
 
+use super::cartridge::{self, Cartridge};
+
 const RAM_SIZE: usize = 0x2000;
+const HIRAM_SIZE: usize = 0x80;
 
 pub struct Bus {
     ram: [u8; RAM_SIZE],
     ppu: Ppu,
+    cartridge: Cartridge,
+    hiram: [u8; HIRAM_SIZE],
+    interrupt_enabled: u8,
+    boot_rom_enabled: u8,
 }
 
 impl Bus {
@@ -32,7 +39,15 @@ impl Bus {
         Bus {
             ppu: Ppu::new(),
             ram: [(); RAM_SIZE].map(|_| 0),
+            cartridge: Cartridge::new(),
+            hiram: [0; HIRAM_SIZE],
+            interrupt_enabled: 0,
+            boot_rom_enabled: 1,
         }
+    }
+
+    pub fn load_cartridge(&mut self, cartridge: Cartridge) {
+        self.cartridge = cartridge;
     }
 
     pub fn load_boot_rom(&mut self) {
@@ -41,7 +56,77 @@ impl Bus {
         }
     }
 
-    pub fn read_rom(&self, address: u16) -> u8 {
-        self.ram[address as usize]
+    /// Mapping:
+    /// 0000-3fff : bank0
+    /// 4000-7fff : bankn
+    /// 8000-9fff : vram
+    /// a000-bfff : cartridge ram
+    /// c000-dfff : working ram
+    /// e000-fdff : working ram mirror
+    /// fe00-fe9f : OAM
+    /// fea0-feff : prohibited, unusable
+    /// ff00-ff7f : I/O
+    /// ff80-fffe : hiram
+    /// ffff-ffff : interrupt enable register
+    pub fn read_8(&self, address: u16) -> u8 {
+        match address {
+            0x0000..=0x3fff => {
+                if self.boot_rom_enabled > 0 && address < 0x100 {
+                    BOOT_SEQUENCE[address as usize]
+                } else {
+                    self.cartridge.read_bank0(address as usize)
+                }
+            }
+            0x4000..=0x7fff => self.cartridge.read_active_bank((address - 0x4000) as usize),
+            0x8000..=0x9fff => self.ppu.read_vram((address - 0x8000) as usize),
+            0xa000..=0xbfff => self.cartridge.read_active_ram((address - 0xa000) as usize),
+            0xc000..=0xdfff => self.ram[(address - 0xc000) as usize],
+            0xe000..=0xfdff => self.ram[(address - 0xe000) as usize],
+            0xfe00..=0xfe9f => self.ppu.read_oam((address - 0xfe00) as usize),
+            0xff00 => 0,          // joypad
+            0xff01..=0xff02 => 0, // serial transfer
+            0xff04..=0xff07 => 0, // time and divider
+            0xff10..=0xff26 => 0, // audio
+            0xff30..=0xff3f => 0, // wave pattern
+            0xff40..=0xff4b => 0, // lcd
+            0xff50 => self.boot_rom_enabled,
+            0xff80..=0xfffe => self.hiram[(address - 0xff00) as usize],
+            0xffff => self.interrupt_enabled,
+            _ => 0,
+        }
+    }
+
+    pub fn write_8(&mut self, address: u16, value: u8) {
+        match address {
+            0x0000..=0x3fff => self.cartridge.write_bank0(address as usize, value),
+            0x4000..=0x7fff => self
+                .cartridge
+                .write_active_bank((address - 0x4000) as usize, value),
+            0x8000..=0x9fff => self.ppu.write_vram((address - 0x8000) as usize, value),
+            0xa000..=0xbfff => self
+                .cartridge
+                .write_active_ram((address - 0xa000) as usize, value),
+            0xc000..=0xdfff => self.ram[(address - 0xc000) as usize] = value,
+            0xe000..=0xfdff => self.ram[(address - 0xe000) as usize] = value,
+            0xfe00..=0xfe9f => self.ppu.write_oam((address - 0xfe00) as usize, value),
+            0xff01..=0xff02 => (), // serial transfer
+            0xff04..=0xff07 => (), // time and divider
+            0xff10..=0xff26 => (), // audio
+            0xff30..=0xff3f => (), // wave pattern
+            0xff40..=0xff4b => (), // lcd
+            0xff50 => self.boot_rom_enabled = value,
+            0xff80..=0xfffe => self.hiram[(address - 0xff00) as usize] = value,
+            0xffff => self.interrupt_enabled = value,
+            _ => (), // Handle most read only and should not happen cases
+        }
+    }
+
+    pub fn read_16(&self, address: u16) -> u16 {
+        (self.read_8(address) as u16) << 8 | (self.read_8(address + 1) as u16)
+    }
+
+    pub fn write_16(&mut self, address: u16, value: u16) {
+        self.write_8(address, (value >> 8) as u8);
+        self.write_8(address + 1, (value & 0xff) as u8);
     }
 }

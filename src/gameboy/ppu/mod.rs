@@ -7,15 +7,34 @@ const NINTENDO_LOGO: [u8; NINTENDO_LOGO_SIZE] = [
 ];
 
 const VRAM_SIZE: usize = 0x2000;
+const OAM_SIZE: usize = 0x9f;
 
 pub struct Ppu {
     vram: [u8; VRAM_SIZE],
+    oam: [u8; OAM_SIZE],
 }
 
 impl Ppu {
     pub fn new() -> Ppu {
         Ppu {
             vram: [(); VRAM_SIZE].map(|_| 0),
+            oam: [0; OAM_SIZE],
         }
+    }
+
+    pub fn read_vram(&self, address: usize) -> u8 {
+        self.vram[address]
+    }
+
+    pub fn write_vram(&mut self, address: usize, value: u8) {
+        self.vram[address] = value;
+    }
+
+    pub fn read_oam(&self, address: usize) -> u8 {
+        self.oam[address]
+    }
+
+    pub fn write_oam(&mut self, address: usize, value: u8) {
+        self.oam[address] = value;
     }
 }

@@ -1,5 +1,7 @@
 use super::cb_instructions::CB_INSTRUCTION_TABLE;
 use crate::gameboy::cpu::Cpu;
+use std::fmt;
+
 pub struct Instruction {
     pub opcode: u8,
     pub length: u16,
@@ -73,6 +75,12 @@ pub enum InstructionCode {
     SET,
 }
 
+impl fmt::Display for InstructionCode {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
     Instruction {
         opcode: 0x00,
@@ -86,14 +94,21 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::LD,
         length: 3,
         cycles: [12, 12],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            let value = cpu.get_immediate_16();
+            cpu.registers.set_bc(value);
+            0
+        },
     },
     Instruction {
         opcode: 0x02,
         name: InstructionCode::LD,
         length: 1,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.set_value_at(cpu.registers.get_bc(), cpu.registers.a);
+            0
+        },
     },
     Instruction {
         opcode: 0x03,
@@ -121,7 +136,10 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::LD,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.b = cpu.get_immediate();
+            0
+        },
     },
     Instruction {
         opcode: 0x07,
@@ -135,7 +153,11 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::LD,
         length: 3,
         cycles: [20, 20],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            let address = cpu.get_immediate_16();
+            cpu.set_value_16_at(address, cpu.registers.sp);
+            0
+        },
     },
     Instruction {
         opcode: 0x09,
@@ -149,7 +171,10 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::LD,
         length: 1,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.a = cpu.get_value_at(cpu.registers.get_bc());
+            0
+        },
     },
     Instruction {
         opcode: 0x0B,
@@ -177,7 +202,10 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::LD,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.c = cpu.get_immediate();
+            0
+        },
     },
     Instruction {
         opcode: 0x0F,
@@ -198,14 +226,21 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::LD,
         length: 3,
         cycles: [12, 12],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            let value = cpu.get_immediate_16();
+            cpu.registers.set_de(value);
+            0
+        },
     },
     Instruction {
         opcode: 0x12,
         name: InstructionCode::LD,
         length: 1,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.set_value_at(cpu.registers.get_de(), cpu.registers.a);
+            0
+        },
     },
     Instruction {
         opcode: 0x13,
@@ -233,7 +268,10 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::LD,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.d = cpu.get_immediate();
+            0
+        },
     },
     Instruction {
         opcode: 0x17,
@@ -261,7 +299,10 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::LD,
         length: 1,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.a = cpu.get_value_at(cpu.registers.get_de());
+            0
+        },
     },
     Instruction {
         opcode: 0x1B,
@@ -289,7 +330,10 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::LD,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.d = cpu.get_immediate();
+            0
+        },
     },
     Instruction {
         opcode: 0x1F,
@@ -310,14 +354,22 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::LD,
         length: 3,
         cycles: [12, 12],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            let value = cpu.get_immediate_16();
+            cpu.registers.set_hl(value);
+            0
+        },
     },
     Instruction {
         opcode: 0x22,
         name: InstructionCode::LD,
         length: 1,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.set_value_at(cpu.registers.get_hl(), cpu.registers.a);
+            cpu.registers.inc_hl();
+            0
+        },
     },
     Instruction {
         opcode: 0x23,
@@ -345,7 +397,10 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::LD,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.h = cpu.get_immediate();
+            0
+        },
     },
     Instruction {
         opcode: 0x27,
@@ -373,7 +428,11 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::LD,
         length: 1,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.a = cpu.get_value_at(cpu.registers.get_hl());
+            cpu.registers.inc_hl();
+            0
+        },
     },
     Instruction {
         opcode: 0x2B,
@@ -401,7 +460,10 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::LD,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.l = cpu.get_immediate();
+            0
+        },
     },
     Instruction {
         opcode: 0x2F,
@@ -422,14 +484,21 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::LD,
         length: 3,
         cycles: [12, 12],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.sp = cpu.get_immediate_16();
+            0
+        },
     },
     Instruction {
         opcode: 0x32,
         name: InstructionCode::LD,
         length: 1,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.set_value_at(cpu.registers.get_hl(), cpu.registers.a);
+            cpu.registers.dec_hl();
+            0
+        },
     },
     Instruction {
         opcode: 0x33,
@@ -457,7 +526,12 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::LD,
         length: 2,
         cycles: [12, 12],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            let value = cpu.get_immediate();
+            let address = cpu.registers.get_hl();
+            cpu.set_value_at(address, value);
+            0
+        },
     },
     Instruction {
         opcode: 0x37,
@@ -485,7 +559,11 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::LD,
         length: 1,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.a = cpu.get_value_at(cpu.registers.get_hl());
+            cpu.registers.dec_hl();
+            0
+        },
     },
     Instruction {
         opcode: 0x3B,
@@ -513,7 +591,10 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::LD,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.a = cpu.get_immediate();
+            0
+        },
     },
     Instruction {
         opcode: 0x3F,
@@ -527,378 +608,540 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.b = cpu.registers.b;
+            0
+        },
     },
     Instruction {
         opcode: 0x41,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.b = cpu.registers.c;
+            0
+        },
     },
     Instruction {
         opcode: 0x42,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.b = cpu.registers.d;
+            0
+        },
     },
     Instruction {
         opcode: 0x43,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.b = cpu.registers.e;
+            0
+        },
     },
     Instruction {
         opcode: 0x44,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.b = cpu.registers.h;
+            0
+        },
     },
     Instruction {
         opcode: 0x45,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.b = cpu.registers.l;
+            0
+        },
     },
     Instruction {
         opcode: 0x46,
         name: InstructionCode::LD,
         length: 1,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.b = cpu.get_value_at(cpu.registers.get_hl());
+            0
+        },
     },
     Instruction {
         opcode: 0x47,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.b = cpu.registers.a;
+            0
+        },
     },
     Instruction {
         opcode: 0x48,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.c = cpu.registers.b;
+            0
+        },
     },
     Instruction {
         opcode: 0x49,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.c = cpu.registers.c;
+            0
+        },
     },
     Instruction {
         opcode: 0x4A,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.c = cpu.registers.d;
+            0
+        },
     },
     Instruction {
         opcode: 0x4B,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.c = cpu.registers.e;
+            0
+        },
     },
     Instruction {
         opcode: 0x4C,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.c = cpu.registers.h;
+            0
+        },
     },
     Instruction {
         opcode: 0x4D,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.c = cpu.registers.l;
+            0
+        },
     },
     Instruction {
         opcode: 0x4E,
         name: InstructionCode::LD,
         length: 1,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.c = cpu.get_value_at(cpu.registers.get_hl());
+            0
+        },
     },
     Instruction {
         opcode: 0x4F,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.c = cpu.registers.a;
+            0
+        },
     },
     Instruction {
         opcode: 0x50,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.d = cpu.registers.b;
+            0
+        },
     },
     Instruction {
         opcode: 0x51,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.d = cpu.registers.c;
+            0
+        },
     },
     Instruction {
         opcode: 0x52,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.d = cpu.registers.d;
+            0
+        },
     },
     Instruction {
         opcode: 0x53,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.d = cpu.registers.e;
+            0
+        },
     },
     Instruction {
         opcode: 0x54,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.d = cpu.registers.h;
+            0
+        },
     },
     Instruction {
         opcode: 0x55,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.d = cpu.registers.l;
+            0
+        },
     },
     Instruction {
         opcode: 0x56,
         name: InstructionCode::LD,
         length: 1,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.d = cpu.get_value_at(cpu.registers.get_hl());
+            0
+        },
     },
     Instruction {
         opcode: 0x57,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.d = cpu.registers.a;
+            0
+        },
     },
     Instruction {
         opcode: 0x58,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.e = cpu.registers.b;
+            0
+        },
     },
     Instruction {
         opcode: 0x59,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.e = cpu.registers.c;
+            0
+        },
     },
     Instruction {
         opcode: 0x5A,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.e = cpu.registers.d;
+            0
+        },
     },
     Instruction {
         opcode: 0x5B,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.e = cpu.registers.e;
+            0
+        },
     },
     Instruction {
         opcode: 0x5C,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.e = cpu.registers.h;
+            0
+        },
     },
     Instruction {
         opcode: 0x5D,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.e = cpu.registers.l;
+            0
+        },
     },
     Instruction {
         opcode: 0x5E,
         name: InstructionCode::LD,
         length: 1,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.e = cpu.get_value_at(cpu.registers.get_hl());
+            0
+        },
     },
     Instruction {
         opcode: 0x5F,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.e = cpu.registers.a;
+            0
+        },
     },
     Instruction {
         opcode: 0x60,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.h = cpu.registers.b;
+            0
+        },
     },
     Instruction {
         opcode: 0x61,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.h = cpu.registers.c;
+            0
+        },
     },
     Instruction {
         opcode: 0x62,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.h = cpu.registers.d;
+            0
+        },
     },
     Instruction {
         opcode: 0x63,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.h = cpu.registers.e;
+            0
+        },
     },
     Instruction {
         opcode: 0x64,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.h = cpu.registers.h;
+            0
+        },
     },
     Instruction {
         opcode: 0x65,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.h = cpu.registers.l;
+            0
+        },
     },
     Instruction {
         opcode: 0x66,
         name: InstructionCode::LD,
         length: 1,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.h = cpu.get_value_at(cpu.registers.get_hl());
+            0
+        },
     },
     Instruction {
         opcode: 0x67,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.h = cpu.registers.a;
+            0
+        },
     },
     Instruction {
         opcode: 0x68,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.l = cpu.registers.b;
+            0
+        },
     },
     Instruction {
         opcode: 0x69,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.l = cpu.registers.c;
+            0
+        },
     },
     Instruction {
         opcode: 0x6A,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.l = cpu.registers.d;
+            0
+        },
     },
     Instruction {
         opcode: 0x6B,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.l = cpu.registers.e;
+            0
+        },
     },
     Instruction {
         opcode: 0x6C,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.l = cpu.registers.h;
+            0
+        },
     },
     Instruction {
         opcode: 0x6D,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.l = cpu.registers.l;
+            0
+        },
     },
     Instruction {
         opcode: 0x6E,
         name: InstructionCode::LD,
         length: 1,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.l = cpu.get_value_at(cpu.registers.get_hl());
+            0
+        },
     },
     Instruction {
         opcode: 0x6F,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.l = cpu.registers.a;
+            0
+        },
     },
     Instruction {
         opcode: 0x70,
         name: InstructionCode::LD,
         length: 1,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.set_value_at(cpu.registers.get_hl(), cpu.registers.b);
+            0
+        },
     },
     Instruction {
         opcode: 0x71,
         name: InstructionCode::LD,
         length: 1,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.set_value_at(cpu.registers.get_hl(), cpu.registers.c);
+            0
+        },
     },
     Instruction {
         opcode: 0x72,
         name: InstructionCode::LD,
         length: 1,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.set_value_at(cpu.registers.get_hl(), cpu.registers.d);
+            0
+        },
     },
     Instruction {
         opcode: 0x73,
         name: InstructionCode::LD,
         length: 1,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.set_value_at(cpu.registers.get_hl(), cpu.registers.e);
+            0
+        },
     },
     Instruction {
         opcode: 0x74,
         name: InstructionCode::LD,
         length: 1,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.set_value_at(cpu.registers.get_hl(), cpu.registers.h);
+            0
+        },
     },
     Instruction {
         opcode: 0x75,
         name: InstructionCode::LD,
         length: 1,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.set_value_at(cpu.registers.get_hl(), cpu.registers.l);
+            0
+        },
     },
     Instruction {
         opcode: 0x76,
@@ -912,63 +1155,90 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::LD,
         length: 1,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.set_value_at(cpu.registers.get_hl(), cpu.registers.a);
+            0
+        },
     },
     Instruction {
         opcode: 0x78,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.a = cpu.registers.b;
+            0
+        },
     },
     Instruction {
         opcode: 0x79,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.a = cpu.registers.c;
+            0
+        },
     },
     Instruction {
         opcode: 0x7A,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.a = cpu.registers.d;
+            0
+        },
     },
     Instruction {
         opcode: 0x7B,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.a = cpu.registers.e;
+            0
+        },
     },
     Instruction {
         opcode: 0x7C,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.a = cpu.registers.h;
+            0
+        },
     },
     Instruction {
         opcode: 0x7D,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.a = cpu.registers.l;
+            0
+        },
     },
     Instruction {
         opcode: 0x7E,
         name: InstructionCode::LD,
         length: 1,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.a = cpu.get_value_at(cpu.registers.get_hl());
+            0
+        },
     },
     Instruction {
         opcode: 0x7F,
         name: InstructionCode::LD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.a = cpu.registers.a;
+            0
+        },
     },
     Instruction {
         opcode: 0x80,
@@ -1199,168 +1469,246 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::AND,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.xor(cpu.registers.b);
+            0
+        },
     },
     Instruction {
         opcode: 0xA1,
         name: InstructionCode::AND,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.xor(cpu.registers.c);
+            0
+        },
     },
     Instruction {
         opcode: 0xA2,
         name: InstructionCode::AND,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.xor(cpu.registers.d);
+            0
+        },
     },
     Instruction {
         opcode: 0xA3,
         name: InstructionCode::AND,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.xor(cpu.registers.e);
+            0
+        },
     },
     Instruction {
         opcode: 0xA4,
         name: InstructionCode::AND,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.xor(cpu.registers.h);
+            0
+        },
     },
     Instruction {
         opcode: 0xA5,
         name: InstructionCode::AND,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.xor(cpu.registers.l);
+            0
+        },
     },
     Instruction {
         opcode: 0xA6,
         name: InstructionCode::AND,
         length: 1,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            let address = cpu.registers.get_hl();
+            let value = cpu.get_value_at(address);
+            cpu.and(value);
+            0
+        },
     },
     Instruction {
         opcode: 0xA7,
         name: InstructionCode::AND,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.xor(cpu.registers.a);
+            0
+        },
     },
     Instruction {
         opcode: 0xA8,
         name: InstructionCode::XOR,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.xor(cpu.registers.b);
+            0
+        },
     },
     Instruction {
         opcode: 0xA9,
         name: InstructionCode::XOR,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.xor(cpu.registers.c);
+            0
+        },
     },
     Instruction {
         opcode: 0xAA,
         name: InstructionCode::XOR,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.xor(cpu.registers.d);
+            0
+        },
     },
     Instruction {
         opcode: 0xAB,
         name: InstructionCode::XOR,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.xor(cpu.registers.e);
+            0
+        },
     },
     Instruction {
         opcode: 0xAC,
         name: InstructionCode::XOR,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.xor(cpu.registers.h);
+            0
+        },
     },
     Instruction {
         opcode: 0xAD,
         name: InstructionCode::XOR,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.xor(cpu.registers.l);
+            0
+        },
     },
     Instruction {
         opcode: 0xAE,
         name: InstructionCode::XOR,
         length: 1,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            let address = cpu.registers.get_hl();
+            let value = cpu.get_value_at(address);
+            cpu.xor(value);
+            0
+        },
     },
     Instruction {
         opcode: 0xAF,
         name: InstructionCode::XOR,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.xor(cpu.registers.a);
+            0
+        },
     },
     Instruction {
         opcode: 0xB0,
         name: InstructionCode::OR,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.or(cpu.registers.b);
+            0
+        },
     },
     Instruction {
         opcode: 0xB1,
         name: InstructionCode::OR,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.or(cpu.registers.c);
+            0
+        },
     },
     Instruction {
         opcode: 0xB2,
         name: InstructionCode::OR,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.or(cpu.registers.d);
+            0
+        },
     },
     Instruction {
         opcode: 0xB3,
         name: InstructionCode::OR,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.or(cpu.registers.e);
+            0
+        },
     },
     Instruction {
         opcode: 0xB4,
         name: InstructionCode::OR,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.or(cpu.registers.h);
+            0
+        },
     },
     Instruction {
         opcode: 0xB5,
         name: InstructionCode::OR,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.or(cpu.registers.l);
+            0
+        },
     },
     Instruction {
         opcode: 0xB6,
         name: InstructionCode::OR,
         length: 1,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            let address = cpu.registers.get_hl();
+            let value = cpu.get_value_at(address);
+            cpu.or(value);
+            0
+        },
     },
     Instruction {
         opcode: 0xB7,
         name: InstructionCode::OR,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.or(cpu.registers.a);
+            0
+        },
     },
     Instruction {
         opcode: 0xB8,
@@ -1502,7 +1850,7 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         cycles: [4, 4],
         operation: |cpu| {
             cpu.registers.pc += 1;
-            let opcode = cpu.bus.read_rom(cpu.registers.pc) as usize;
+            let opcode = cpu.bus.read_8(cpu.registers.pc) as usize;
 
             let instruction_result = (&CB_INSTRUCTION_TABLE[opcode].operation)(cpu);
 
@@ -1654,7 +2002,11 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::LDH,
         length: 2,
         cycles: [12, 12],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            let address = 0xff00 | cpu.get_immediate() as u16;
+            cpu.set_value_at(address, cpu.registers.a);
+            0
+        },
     },
     Instruction {
         opcode: 0xE1,
@@ -1668,7 +2020,11 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::LD,
         length: 1,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            let address = 0xff00 | cpu.registers.c as u16;
+            cpu.set_value_at(address, cpu.registers.a);
+            0
+        },
     },
     Instruction {
         opcode: 0xE3,
@@ -1724,7 +2080,11 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::LD,
         length: 3,
         cycles: [16, 16],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            let address = cpu.get_immediate_16();
+            cpu.set_value_at(address, cpu.registers.a);
+            0
+        },
     },
     Instruction {
         opcode: 0xEB,
@@ -1766,7 +2126,11 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::LDH,
         length: 2,
         cycles: [12, 12],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            let address = 0xff00 | cpu.get_immediate() as u16;
+            cpu.registers.a = cpu.get_value_at(address);
+            0
+        },
     },
     Instruction {
         opcode: 0xF1,
@@ -1780,7 +2144,11 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::LD,
         length: 1,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            let address = 0xff00 | cpu.registers.c as u16;
+            cpu.registers.a = cpu.get_value_at(address);
+            0
+        },
     },
     Instruction {
         opcode: 0xF3,
@@ -1822,21 +2190,38 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::LD,
         length: 2,
         cycles: [12, 12],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.flags.clear_flags();
+            let value = cpu.get_immediate() as u16;
+
+            cpu.flags.set_half_carry_16(value, cpu.registers.sp);
+
+            let (value, carry) = cpu.registers.sp.overflowing_add(value);
+            cpu.registers.set_hl(value);
+            cpu.flags.carry = carry;
+            0
+        },
     },
     Instruction {
         opcode: 0xF9,
         name: InstructionCode::LD,
         length: 1,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.sp = cpu.registers.get_hl();
+            0
+        },
     },
     Instruction {
         opcode: 0xFA,
         name: InstructionCode::LD,
         length: 3,
         cycles: [16, 16],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            let address = cpu.get_immediate_16();
+            cpu.registers.a = cpu.get_value_at(address);
+            0
+        },
     },
     Instruction {
         opcode: 0xFB,
