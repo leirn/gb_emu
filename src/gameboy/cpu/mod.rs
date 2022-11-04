@@ -67,12 +67,38 @@ impl Cpu {
         self.bus.read_8(address)
     }
 
+    fn get_value_16_at(&mut self, address: u16) -> u16 {
+        self.bus.read_16(address)
+    }
+
+    fn get_value_at_hl(&mut self) -> u8 {
+        self.bus.read_8(self.registers.get_hl())
+    }
+
     fn set_value_at(&mut self, address: u16, value: u8) {
         self.bus.write_8(address, value);
     }
 
+    fn set_value_at_hl(&mut self, value: u8) {
+        self.bus.write_8(self.registers.get_hl(), value);
+    }
+
     fn set_value_16_at(&mut self, address: u16, value: u16) {
         self.bus.write_16(address, value);
+    }
+
+    fn get_af(&self) -> u16 {
+        (self.registers.a as u16) << 8 | self.flags.get_flags() as u16
+    }
+
+    fn set_af(&mut self, value: u16) {
+        self.registers.a = (value >> 8) as u8;
+        self.flags.set_flags((value & 0xff) as u8);
+    }
+
+    fn call(&mut self, address: u16) {
+        self.push(self.registers.pc + 3);
+        self.registers.pc = address;
     }
 
     fn xor(&mut self, value: u8) {
@@ -92,5 +118,54 @@ impl Cpu {
         self.flags.clear_flags();
         self.flags.half_carry = true;
         self.flags.set_zero(self.registers.a)
+    }
+
+    fn add(&mut self, value: u8) {
+        self.flags.clear_flags();
+        self.flags.set_half_carry_8(self.registers.a, value);
+        (self.registers.a, self.flags.carry) = self.registers.a.overflowing_add(value);
+        self.flags.set_zero(self.registers.a);
+    }
+
+    // TODO : check flags
+    fn sub(&mut self, value: u8) {
+        self.flags.negative = true;
+        self.flags.set_half_carry_8(self.registers.a, value);
+        (self.registers.a, self.flags.carry) = self.registers.a.overflowing_sub(value);
+        self.flags.set_zero(self.registers.a);
+    }
+
+    fn adc(&mut self, value: u8) {
+        self.flags.set_half_carry_8(self.registers.a, value);
+        let adc = (value as u16) + (self.registers.a as u16) + (self.flags.carry as u16);
+        self.flags.carry = ((adc >> 8) & 1) != 0;
+        self.registers.a = (0xff & adc) as u8;
+        self.flags.set_zero(self.registers.a);
+        self.flags.negative = false;
+    }
+
+    // TODO : check flags
+    fn sbc(&mut self, value: u8) {
+        self.adc(255 - value);
+        self.flags.negative = true;
+    }
+
+    fn cp(&mut self, value: u8) {
+        self.flags.zero = self.registers.a == value;
+        self.flags.negative = true;
+        self.flags.carry = self.registers.a < value;
+        // TODO : handle half carry with sub and sbc
+    }
+
+    fn push(&mut self, value: u16) {
+        self.set_value_16_at(self.registers.sp, value);
+        self.registers.dec_sp();
+        self.registers.dec_sp();
+    }
+
+    fn pop(&mut self) -> u16 {
+        self.registers.inc_sp();
+        self.registers.inc_sp();
+        self.get_value_16_at(self.registers.sp)
     }
 }

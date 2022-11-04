@@ -21,6 +21,14 @@ impl Registers {
         self.c = (value & 0xff) as u8;
     }
 
+    pub fn inc_bc(&mut self) {
+        self.set_bc(self.get_bc() + 1);
+    }
+
+    pub fn dec_bc(&mut self) {
+        self.set_bc(self.get_bc() - 1);
+    }
+
     pub fn get_de(&self) -> u16 {
         (self.d as u16) << 8 | self.e as u16
     }
@@ -28,6 +36,14 @@ impl Registers {
     pub fn set_de(&mut self, value: u16) {
         self.d = (value >> 8) as u8;
         self.e = (value & 0xff) as u8;
+    }
+
+    pub fn inc_de(&mut self) {
+        self.set_de(self.get_de() + 1);
+    }
+
+    pub fn dec_de(&mut self) {
+        self.set_de(self.get_de() - 1);
     }
 
     pub fn get_hl(&self) -> u16 {
@@ -44,6 +60,14 @@ impl Registers {
     }
 
     pub fn dec_hl(&mut self) {
-        self.set_hl(self.get_hl() + 1);
+        self.set_hl(self.get_hl() - 1);
+    }
+
+    pub fn inc_sp(&mut self) {
+        self.sp += 1;
+    }
+
+    pub fn dec_sp(&mut self) {
+        self.sp -= 1;
     }
 }
