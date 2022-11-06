@@ -1,3 +1,4 @@
+use std::fmt;
 use std::fs::File;
 use std::io::BufReader;
 use std::io::Read;
@@ -12,6 +13,7 @@ const TYPE_ADDRESS: usize = 0x0147;
 const ROM_SIZE_ADDRESS: usize = 0x0148;
 const RAM_SIZE_ADDRESS: usize = 0x0149;
 
+#[derive(PartialEq, Debug)]
 pub enum CartrigeModels {
     RomOnly,
     MBC1,
@@ -23,6 +25,7 @@ pub enum CartrigeModels {
     RomRamBattery,
 }
 
+#[derive(PartialEq, Debug)]
 pub enum RomSize {
     KBytes32NoBanking,
     KBytes64Bank4,
@@ -38,6 +41,7 @@ pub enum RomSize {
     MBytes1_5Bank96,
 }
 
+#[derive(PartialEq, Debug)]
 pub enum RamSize {
     None,
     KBytes2,
@@ -90,8 +94,6 @@ impl Cartridge {
 
         let s = buffer[TITLE_START_ADDRESS..=TITLE_END_ADDRESS].to_vec();
         c.title = String::from_utf8_lossy(&s).to_string();
-
-        println!("{}", c.title);
 
         for i in 0..ROM_BANK_SIZE {
             c.bank_0[i] = buffer[i];
@@ -294,5 +296,37 @@ impl Cartridge {
 
     pub fn write_active_ram(&mut self, address: usize, value: u8) {
         self.ram_n[self.active_ram][address] = value;
+    }
+}
+
+impl fmt::Display for Cartridge {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // Write strictly the first element into the supplied output
+        // stream: `f`. Returns `fmt::Result` which indicates whether the
+        // operation succeeded or failed. Note that `write!` uses syntax which
+        // is very similar to `println!`.
+        write!(
+            f,
+            "{}, {}, {}, {}",
+            self.title, self.model, self.rom_size, self.ram_size
+        )
+    }
+}
+
+impl fmt::Display for RomSize {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+impl fmt::Display for RamSize {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+impl fmt::Display for CartrigeModels {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
     }
 }

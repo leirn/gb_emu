@@ -1916,7 +1916,14 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::RET,
         length: 1,
         cycles: [20, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            if !cpu.flags.zero {
+                cpu.ret();
+                0
+            } else {
+                1
+            }
+        },
     },
     Instruction {
         opcode: 0xC1,
@@ -1990,14 +1997,24 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::RET,
         length: 1,
         cycles: [20, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            if cpu.flags.zero {
+                cpu.ret();
+                0
+            } else {
+                1
+            }
+        },
     },
     Instruction {
         opcode: 0xC9,
         name: InstructionCode::RET,
         length: 1,
         cycles: [16, 16],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.ret();
+            0
+        },
     },
     Instruction {
         opcode: 0xCA,
@@ -2040,7 +2057,6 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         length: 3,
         cycles: [24, 24],
         operation: |cpu| {
-            cpu.push(cpu.registers.pc + 3);
             let address = cpu.get_immediate_16();
             cpu.call(address);
             0
@@ -2069,7 +2085,14 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::RET,
         length: 1,
         cycles: [20, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            if !cpu.flags.carry {
+                cpu.ret();
+                0
+            } else {
+                1
+            }
+        },
     },
     Instruction {
         opcode: 0xD1,
@@ -2143,7 +2166,14 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::RET,
         length: 1,
         cycles: [20, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            if !cpu.flags.carry {
+                cpu.ret();
+                0
+            } else {
+                1
+            }
+        },
     },
     Instruction {
         opcode: 0xD9,

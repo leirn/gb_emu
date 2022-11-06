@@ -7,6 +7,10 @@ use argparse::{ArgumentParser, Store};
 fn main() {
     let mut rom_file: String = String::new();
     {
+        // For debugging only
+
+        std::env::set_var("RUST_BACKTRACE", "1");
+
         // this block limits scope of borrows by ap.refer() method
         let mut ap = ArgumentParser::new();
         ap.set_description("Yet another GB Emulator in Rust");

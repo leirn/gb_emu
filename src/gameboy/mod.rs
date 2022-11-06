@@ -19,7 +19,7 @@ impl GameBoy {
     pub fn start(&mut self, rom_file: String) {
         // Loading the cartridge
         let cartridge = Cartridge::load(rom_file);
-
+        println!("{}", cartridge);
         /*
             - Une fois que la console est allumée, le processeur commence à lire à l’adresse 0x00 (emplacement de la ROM de la Game Boy).
 

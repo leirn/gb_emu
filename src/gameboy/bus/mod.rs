@@ -90,7 +90,7 @@ impl Bus {
             0xff30..=0xff3f => 0, // wave pattern
             0xff40..=0xff4b => 0, // lcd
             0xff50 => self.boot_rom_enabled,
-            0xff80..=0xfffe => self.hiram[(address - 0xff00) as usize],
+            0xff80..=0xfffe => self.hiram[(address - 0xff80) as usize],
             0xffff => self.interrupt_enabled,
             _ => 0,
         }
@@ -115,18 +115,18 @@ impl Bus {
             0xff30..=0xff3f => (), // wave pattern
             0xff40..=0xff4b => (), // lcd
             0xff50 => self.boot_rom_enabled = value,
-            0xff80..=0xfffe => self.hiram[(address - 0xff00) as usize] = value,
+            0xff80..=0xfffe => self.hiram[(address - 0xff80) as usize] = value,
             0xffff => self.interrupt_enabled = value,
             _ => (), // Handle most read only and should not happen cases
         }
     }
 
     pub fn read_16(&self, address: u16) -> u16 {
-        (self.read_8(address) as u16) << 8 | (self.read_8(address + 1) as u16)
+        (self.read_8(address + 1) as u16) << 8 | (self.read_8(address) as u16)
     }
 
     pub fn write_16(&mut self, address: u16, value: u16) {
-        self.write_8(address, (value >> 8) as u8);
-        self.write_8(address + 1, (value & 0xff) as u8);
+        self.write_8(address + 1, (value >> 8) as u8);
+        self.write_8(address, (value & 0xff) as u8);
     }
 }

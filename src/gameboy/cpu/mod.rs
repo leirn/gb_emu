@@ -34,6 +34,10 @@ impl Cpu {
     }
 
     pub fn next(&mut self) {
+        if self.registers.pc > 0x1000 {
+            panic!("Out of boot rom : {:04x}", self.registers.pc);
+        }
+
         if self.remaining_cycles > 0 {
             self.remaining_cycles -= 1;
             return;
@@ -97,7 +101,13 @@ impl Cpu {
     }
 
     fn call(&mut self, address: u16) {
+        println!("Call to {}", address);
         self.push(self.registers.pc + 3);
+        self.registers.pc = address;
+    }
+
+    fn ret(&mut self) {
+        let address = self.pop();
         self.registers.pc = address;
     }
 
@@ -158,6 +168,8 @@ impl Cpu {
     }
 
     fn push(&mut self, value: u16) {
+        println!("Push {:04x} at {:04x}", value, self.registers.sp);
+
         self.set_value_16_at(self.registers.sp, value);
         self.registers.dec_sp();
         self.registers.dec_sp();
@@ -166,6 +178,8 @@ impl Cpu {
     fn pop(&mut self) -> u16 {
         self.registers.inc_sp();
         self.registers.inc_sp();
-        self.get_value_16_at(self.registers.sp)
+        let value = self.get_value_16_at(self.registers.sp);
+        println!("Pop {:04x} at {:04x}", value, self.registers.sp);
+        value
     }
 }
