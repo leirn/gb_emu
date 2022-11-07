@@ -1,3 +1,15 @@
+#[derive(PartialEq)]
+pub enum RegisterNames {
+    A,
+    B,
+    C,
+    D,
+    E,
+    H,
+    L,
+    IndirectHL,
+}
+
 #[derive(Default, Clone, Copy)]
 pub struct Registers {
     pub a: u8,

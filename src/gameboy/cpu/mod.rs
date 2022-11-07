@@ -8,6 +8,8 @@ use flags::Flags;
 use instructions::INSTRUCTION_TABLE;
 use registers::Registers;
 
+use self::registers::RegisterNames;
+
 use super::cartridge::Cartridge;
 
 pub struct Cpu {
@@ -181,5 +183,271 @@ impl Cpu {
         let value = self.get_value_16_at(self.registers.sp);
         println!("Pop {:04x} at {:04x}", value, self.registers.sp);
         value
+    }
+
+    /// Rotates arg1 to the left with bit 7 being moved to bit 0 and also stored into the carry
+    fn rlc(&mut self, register: RegisterNames) {
+        let mut value = match register {
+            RegisterNames::A => self.registers.a,
+            RegisterNames::B => self.registers.b,
+            RegisterNames::C => self.registers.c,
+            RegisterNames::D => self.registers.d,
+            RegisterNames::E => self.registers.e,
+            RegisterNames::H => self.registers.h,
+            RegisterNames::L => self.registers.l,
+            RegisterNames::IndirectHL => self.get_value_at(self.registers.get_hl()),
+        };
+        self.flags.clear_flags();
+        value = value.rotate_left(1);
+        self.flags.set_zero(value);
+        self.flags.carry = (value) & 0x1 == 0x1;
+        match register {
+            RegisterNames::A => self.registers.a = value,
+            RegisterNames::B => self.registers.b = value,
+            RegisterNames::C => self.registers.c = value,
+            RegisterNames::D => self.registers.d = value,
+            RegisterNames::E => self.registers.e = value,
+            RegisterNames::H => self.registers.h = value,
+            RegisterNames::L => self.registers.l = value,
+            RegisterNames::IndirectHL => self.set_value_at(self.registers.get_hl(), value),
+        }
+    }
+
+    /// Rotates arg1 register to the left with the carry's value put into bit 0 and bit 7 is put into the carry
+    fn rl(&mut self, register: RegisterNames) {
+        let mut value = match register {
+            RegisterNames::A => self.registers.a,
+            RegisterNames::B => self.registers.b,
+            RegisterNames::C => self.registers.c,
+            RegisterNames::D => self.registers.d,
+            RegisterNames::E => self.registers.e,
+            RegisterNames::H => self.registers.h,
+            RegisterNames::L => self.registers.l,
+            RegisterNames::IndirectHL => self.get_value_at(self.registers.get_hl()),
+        };
+
+        let carry = self.flags.carry;
+        self.flags.clear_flags();
+
+        self.flags.carry = value >> 7 == 0x1;
+        value = ((carry as u8) << 7) | (value & 0x7f);
+
+        value = value.rotate_left(1);
+        self.flags.set_zero(value);
+
+        match register {
+            RegisterNames::A => self.registers.a = value,
+            RegisterNames::B => self.registers.b = value,
+            RegisterNames::C => self.registers.c = value,
+            RegisterNames::D => self.registers.d = value,
+            RegisterNames::E => self.registers.e = value,
+            RegisterNames::H => self.registers.h = value,
+            RegisterNames::L => self.registers.l = value,
+            RegisterNames::IndirectHL => self.set_value_at(self.registers.get_hl(), value),
+        }
+    }
+
+    /// Rotates arg1 to the right with bit 0 moved to bit 7 and also stored into the carry.
+    fn rrc(&mut self, register: RegisterNames) {
+        let mut value = match register {
+            RegisterNames::A => self.registers.a,
+            RegisterNames::B => self.registers.b,
+            RegisterNames::C => self.registers.c,
+            RegisterNames::D => self.registers.d,
+            RegisterNames::E => self.registers.e,
+            RegisterNames::H => self.registers.h,
+            RegisterNames::L => self.registers.l,
+            RegisterNames::IndirectHL => self.get_value_at(self.registers.get_hl()),
+        };
+        self.flags.clear_flags();
+        self.flags.carry = (value) & 0x1 == 0x1;
+        value = value.rotate_right(1);
+        self.flags.set_zero(value);
+        match register {
+            RegisterNames::A => self.registers.a = value,
+            RegisterNames::B => self.registers.b = value,
+            RegisterNames::C => self.registers.c = value,
+            RegisterNames::D => self.registers.d = value,
+            RegisterNames::E => self.registers.e = value,
+            RegisterNames::H => self.registers.h = value,
+            RegisterNames::L => self.registers.l = value,
+            RegisterNames::IndirectHL => self.set_value_at(self.registers.get_hl(), value),
+        }
+    }
+
+    /// Rotates arg1 to the right with the carry put in bit 7 and bit 0 put into the carry.
+    fn rr(&mut self, register: RegisterNames) {
+        let mut value = match register {
+            RegisterNames::A => self.registers.a,
+            RegisterNames::B => self.registers.b,
+            RegisterNames::C => self.registers.c,
+            RegisterNames::D => self.registers.d,
+            RegisterNames::E => self.registers.e,
+            RegisterNames::H => self.registers.h,
+            RegisterNames::L => self.registers.l,
+            RegisterNames::IndirectHL => self.get_value_at(self.registers.get_hl()),
+        };
+
+        let carry = self.flags.carry;
+        self.flags.clear_flags();
+
+        self.flags.carry = value & 0x1 == 0x1;
+        value = (carry as u8) | (value & 0xfe);
+
+        value = value.rotate_right(1);
+        self.flags.set_zero(value);
+
+        match register {
+            RegisterNames::A => self.registers.a = value,
+            RegisterNames::B => self.registers.b = value,
+            RegisterNames::C => self.registers.c = value,
+            RegisterNames::D => self.registers.d = value,
+            RegisterNames::E => self.registers.e = value,
+            RegisterNames::H => self.registers.h = value,
+            RegisterNames::L => self.registers.l = value,
+            RegisterNames::IndirectHL => self.set_value_at(self.registers.get_hl(), value),
+        }
+    }
+
+    /// Shifts arg1 register to the left with bit 7 moved to the carry flag and bit 0 reset (zeroed)
+    fn sla(&mut self, register: RegisterNames) {
+        let mut value = match register {
+            RegisterNames::A => self.registers.a,
+            RegisterNames::B => self.registers.b,
+            RegisterNames::C => self.registers.c,
+            RegisterNames::D => self.registers.d,
+            RegisterNames::E => self.registers.e,
+            RegisterNames::H => self.registers.h,
+            RegisterNames::L => self.registers.l,
+            RegisterNames::IndirectHL => self.get_value_at(self.registers.get_hl()),
+        };
+        self.flags.clear_flags();
+        self.flags.carry = (value >> 7) & 0x1 == 0x1;
+        value = value.wrapping_shl(1);
+        self.flags.set_zero(value);
+        match register {
+            RegisterNames::A => self.registers.a = value,
+            RegisterNames::B => self.registers.b = value,
+            RegisterNames::C => self.registers.c = value,
+            RegisterNames::D => self.registers.d = value,
+            RegisterNames::E => self.registers.e = value,
+            RegisterNames::H => self.registers.h = value,
+            RegisterNames::L => self.registers.l = value,
+            RegisterNames::IndirectHL => self.set_value_at(self.registers.get_hl(), value),
+        }
+    }
+
+    /// Shifts arg1 register to the right with bit 0 moved to the carry flag and bit 7 retaining it's original value
+    fn sra(&mut self, register: RegisterNames) {
+        let mut value = match register {
+            RegisterNames::A => self.registers.a,
+            RegisterNames::B => self.registers.b,
+            RegisterNames::C => self.registers.c,
+            RegisterNames::D => self.registers.d,
+            RegisterNames::E => self.registers.e,
+            RegisterNames::H => self.registers.h,
+            RegisterNames::L => self.registers.l,
+            RegisterNames::IndirectHL => self.get_value_at(self.registers.get_hl()),
+        };
+        self.flags.clear_flags();
+        self.flags.carry = (value) & 0x1 == 0x1;
+        value = (value & 0x80) | value.wrapping_shr(1);
+        self.flags.set_zero(value);
+        match register {
+            RegisterNames::A => self.registers.a = value,
+            RegisterNames::B => self.registers.b = value,
+            RegisterNames::C => self.registers.c = value,
+            RegisterNames::D => self.registers.d = value,
+            RegisterNames::E => self.registers.e = value,
+            RegisterNames::H => self.registers.h = value,
+            RegisterNames::L => self.registers.l = value,
+            RegisterNames::IndirectHL => self.set_value_at(self.registers.get_hl(), value),
+        }
+    }
+
+    /// Shifts arg1 register to the right with bit 0 moved to the carry flag and bit 7 zeroed
+    fn srl(&mut self, register: RegisterNames) {
+        let mut value = match register {
+            RegisterNames::A => self.registers.a,
+            RegisterNames::B => self.registers.b,
+            RegisterNames::C => self.registers.c,
+            RegisterNames::D => self.registers.d,
+            RegisterNames::E => self.registers.e,
+            RegisterNames::H => self.registers.h,
+            RegisterNames::L => self.registers.l,
+            RegisterNames::IndirectHL => self.get_value_at(self.registers.get_hl()),
+        };
+        self.flags.clear_flags();
+        self.flags.carry = (value) & 0x1 == 0x1;
+        value = value.wrapping_shr(1);
+        self.flags.set_zero(value);
+        match register {
+            RegisterNames::A => self.registers.a = value,
+            RegisterNames::B => self.registers.b = value,
+            RegisterNames::C => self.registers.c = value,
+            RegisterNames::D => self.registers.d = value,
+            RegisterNames::E => self.registers.e = value,
+            RegisterNames::H => self.registers.h = value,
+            RegisterNames::L => self.registers.l = value,
+            RegisterNames::IndirectHL => self.set_value_at(self.registers.get_hl(), value),
+        }
+    }
+
+    /// Reset bit *bit_index* in *register register*
+    fn res(&mut self, register: RegisterNames, bit_index: u8) {
+        let mask = !(1_u8 << bit_index);
+        match register {
+            RegisterNames::A => self.registers.a &= mask,
+            RegisterNames::B => self.registers.b &= mask,
+            RegisterNames::C => self.registers.c &= mask,
+            RegisterNames::D => self.registers.d &= mask,
+            RegisterNames::E => self.registers.e &= mask,
+            RegisterNames::H => self.registers.h &= mask,
+            RegisterNames::L => self.registers.l &= mask,
+            RegisterNames::IndirectHL => {
+                let hl = self.registers.get_hl();
+                let value = self.get_value_at(hl) & mask;
+                self.set_value_at(hl, value);
+            }
+        }
+    }
+
+    /// Set bit *bit_index* in *register register*
+    fn set(&mut self, register: RegisterNames, bit_index: u8) {
+        let mask = (1_u8 << bit_index);
+        match register {
+            RegisterNames::A => self.registers.a |= mask,
+            RegisterNames::B => self.registers.b |= mask,
+            RegisterNames::C => self.registers.c |= mask,
+            RegisterNames::D => self.registers.d |= mask,
+            RegisterNames::E => self.registers.e |= mask,
+            RegisterNames::H => self.registers.h |= mask,
+            RegisterNames::L => self.registers.l |= mask,
+            RegisterNames::IndirectHL => {
+                let hl = self.registers.get_hl();
+                let value = self.get_value_at(hl) | mask;
+                self.set_value_at(hl, value);
+            }
+        }
+    }
+
+    fn swap(&mut self, register: RegisterNames) {
+        let swap_internal = |value: u8| ((value & 0x0f) << 4) | ((value & 0xf0) >> 4);
+
+        match register {
+            RegisterNames::A => self.registers.a = swap_internal(self.registers.a),
+            RegisterNames::B => self.registers.b = swap_internal(self.registers.b),
+            RegisterNames::C => self.registers.c = swap_internal(self.registers.c),
+            RegisterNames::D => self.registers.d = swap_internal(self.registers.d),
+            RegisterNames::E => self.registers.e = swap_internal(self.registers.e),
+            RegisterNames::H => self.registers.h = swap_internal(self.registers.h),
+            RegisterNames::L => self.registers.l = swap_internal(self.registers.l),
+            RegisterNames::IndirectHL => {
+                let hl = self.registers.get_hl();
+                let value = self.get_value_at(hl);
+                let value = swap_internal(value);
+                self.set_value_at(hl, value);
+            }
+        }
     }
 }

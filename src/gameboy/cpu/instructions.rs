@@ -1,4 +1,5 @@
 use super::cb_instructions::CB_INSTRUCTION_TABLE;
+use super::registers::RegisterNames;
 use crate::gameboy::cpu::Cpu;
 use std::fmt;
 
@@ -149,7 +150,11 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::RLCA,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.rlc(RegisterNames::A);
+            cpu.flags.zero = false;
+            0
+        },
     },
     Instruction {
         opcode: 0x08,
@@ -218,7 +223,11 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::RRCA,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.rrc(RegisterNames::A);
+            cpu.flags.zero = false;
+            0
+        },
     },
     Instruction {
         opcode: 0x10,
@@ -287,7 +296,11 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::RLA,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.rl(RegisterNames::A);
+            cpu.flags.zero = false;
+            0
+        },
     },
     Instruction {
         opcode: 0x18,
@@ -352,7 +365,11 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::RRA,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.rr(RegisterNames::A);
+            cpu.flags.zero = false;
+            0
+        },
     },
     Instruction {
         opcode: 0x20,
