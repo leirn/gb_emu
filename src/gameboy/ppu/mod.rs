@@ -1,3 +1,5 @@
+// http://blog.kevtris.org/blogfiles/Nitty%20Gritty%20Gameboy%20VRAM%20Timing.txt
+
 const NINTENDO_LOGO_SIZE: usize = 0x30;
 
 const NINTENDO_LOGO: [u8; NINTENDO_LOGO_SIZE] = [

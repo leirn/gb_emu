@@ -18,6 +18,9 @@ pub struct Cpu {
     pub bus: Bus,
     remaining_cycles: u32,
     total_cycles: u32,
+    interruption_enabled: bool,
+    future_interruption_enabled: bool,
+    switch_interruption_enabled_in: u8,
 }
 
 impl Cpu {
@@ -28,6 +31,9 @@ impl Cpu {
             bus: Bus::new(),
             remaining_cycles: 0,
             total_cycles: 0,
+            interruption_enabled: true,
+            future_interruption_enabled: true,
+            switch_interruption_enabled_in: 0,
         }
     }
 
@@ -38,6 +44,13 @@ impl Cpu {
     pub fn next(&mut self) {
         if self.registers.pc > 0x1000 {
             panic!("Out of boot rom : {:04x}", self.registers.pc);
+        }
+
+        if self.switch_interruption_enabled_in > 0 {
+            self.switch_interruption_enabled_in -= 1;
+            if self.switch_interruption_enabled_in == 0 {
+                self.interruption_enabled = self.future_interruption_enabled;
+            }
         }
 
         if self.remaining_cycles > 0 {
@@ -495,5 +508,117 @@ impl Cpu {
         };
 
         self.flags.zero = (value >> bit_index) & 0x1 == 0x0;
+    }
+
+    fn inc(&mut self, register: RegisterNames) {
+        self.flags.negative = false;
+
+        let (old_value, new_value) = match register {
+            RegisterNames::A => {
+                let old = self.registers.a;
+                self.registers.a += 1;
+                (old, self.registers.a)
+            }
+            RegisterNames::B => {
+                let old = self.registers.b;
+                self.registers.b += 1;
+                (old, self.registers.b)
+            }
+            RegisterNames::C => {
+                let old = self.registers.c;
+                self.registers.c += 1;
+                (old, self.registers.c)
+            }
+            RegisterNames::D => {
+                let old = self.registers.d;
+                self.registers.d += 1;
+                (old, self.registers.d)
+            }
+            RegisterNames::E => {
+                let old = self.registers.e;
+                self.registers.e += 1;
+                (old, self.registers.e)
+            }
+            RegisterNames::H => {
+                let old = self.registers.h;
+                self.registers.h += 1;
+                (old, self.registers.h)
+            }
+            RegisterNames::L => {
+                let old = self.registers.l;
+                self.registers.l += 1;
+                (old, self.registers.l)
+            }
+            RegisterNames::IndirectHL => {
+                let hl = self.registers.get_hl();
+                let old = self.get_value_at(hl);
+                let value = old + 1;
+                self.set_value_at(hl, value);
+                (old, value)
+            }
+        };
+        self.flags.set_half_carry_8(old_value, new_value);
+    }
+
+    fn dec(&mut self, register: RegisterNames) {
+        self.flags.negative = false;
+
+        let (old_value, new_value) = match register {
+            RegisterNames::A => {
+                let old = self.registers.a;
+                self.registers.a -= 1;
+                (old, self.registers.a)
+            }
+            RegisterNames::B => {
+                let old = self.registers.b;
+                self.registers.b -= 1;
+                (old, self.registers.b)
+            }
+            RegisterNames::C => {
+                let old = self.registers.c;
+                self.registers.c -= 1;
+                (old, self.registers.c)
+            }
+            RegisterNames::D => {
+                let old = self.registers.d;
+                self.registers.d -= 1;
+                (old, self.registers.d)
+            }
+            RegisterNames::E => {
+                let old = self.registers.e;
+                self.registers.e -= 1;
+                (old, self.registers.e)
+            }
+            RegisterNames::H => {
+                let old = self.registers.h;
+                self.registers.h -= 1;
+                (old, self.registers.h)
+            }
+            RegisterNames::L => {
+                let old = self.registers.l;
+                self.registers.l -= 1;
+                (old, self.registers.l)
+            }
+            RegisterNames::IndirectHL => {
+                let hl = self.registers.get_hl();
+                let old = self.get_value_at(hl);
+                let value = old - 1;
+                self.set_value_at(hl, value);
+                (old, value)
+            }
+        };
+        self.flags.set_half_carry_8(old_value, new_value); // TODO - half borrow ?
+    }
+
+    /// ei activate interrupt, but only in 3 cycles
+    fn ei(&mut self) {
+        self.future_interruption_enabled = true;
+        self.switch_interruption_enabled_in = 3;
+    }
+
+    /// di deactivate interrupt, but only in 3 cycles
+    fn di(&mut self) {
+        self.future_interruption_enabled = true;
+        self.switch_interruption_enabled_in = 3;
     }
 }

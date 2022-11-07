@@ -121,14 +121,20 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::INC,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.inc(RegisterNames::B);
+            0
+        },
     },
     Instruction {
         opcode: 0x05,
         name: InstructionCode::DEC,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.dec(RegisterNames::B);
+            0
+        },
     },
     Instruction {
         opcode: 0x06,
@@ -194,14 +200,20 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::INC,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.inc(RegisterNames::C);
+            0
+        },
     },
     Instruction {
         opcode: 0x0D,
         name: InstructionCode::DEC,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.dec(RegisterNames::C);
+            0
+        },
     },
     Instruction {
         opcode: 0x0E,
@@ -267,14 +279,20 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::INC,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.inc(RegisterNames::D);
+            0
+        },
     },
     Instruction {
         opcode: 0x15,
         name: InstructionCode::DEC,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.dec(RegisterNames::D);
+            0
+        },
     },
     Instruction {
         opcode: 0x16,
@@ -336,14 +354,20 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::INC,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.inc(RegisterNames::E);
+            0
+        },
     },
     Instruction {
         opcode: 0x1D,
         name: InstructionCode::DEC,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.dec(RegisterNames::E);
+            0
+        },
     },
     Instruction {
         opcode: 0x1E,
@@ -410,14 +434,20 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::INC,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.inc(RegisterNames::H);
+            0
+        },
     },
     Instruction {
         opcode: 0x25,
         name: InstructionCode::DEC,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.dec(RegisterNames::H);
+            0
+        },
     },
     Instruction {
         opcode: 0x26,
@@ -476,14 +506,20 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::INC,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.inc(RegisterNames::L);
+            0
+        },
     },
     Instruction {
         opcode: 0x2D,
         name: InstructionCode::DEC,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.dec(RegisterNames::L);
+            0
+        },
     },
     Instruction {
         opcode: 0x2E,
@@ -545,14 +581,20 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::INC,
         length: 1,
         cycles: [12, 12],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.inc(RegisterNames::IndirectHL);
+            0
+        },
     },
     Instruction {
         opcode: 0x35,
         name: InstructionCode::DEC,
         length: 1,
         cycles: [12, 12],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.dec(RegisterNames::IndirectHL);
+            0
+        },
     },
     Instruction {
         opcode: 0x36,
@@ -612,14 +654,20 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::INC,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.inc(RegisterNames::A);
+            0
+        },
     },
     Instruction {
         opcode: 0x3D,
         name: InstructionCode::DEC,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.dec(RegisterNames::A);
+            0
+        },
     },
     Instruction {
         opcode: 0x3E,
@@ -2424,7 +2472,10 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::DI,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.di();
+            0
+        },
     },
     Instruction {
         opcode: 0xF4,
@@ -2504,7 +2555,10 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::EI,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.ei();
+            0
+        },
     },
     Instruction {
         opcode: 0xFC,
