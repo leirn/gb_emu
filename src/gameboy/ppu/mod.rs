@@ -1,4 +1,5 @@
 // http://blog.kevtris.org/blogfiles/Nitty%20Gritty%20Gameboy%20VRAM%20Timing.txt
+// http://bgb.bircd.org/pandocs.htm#videodisplay
 
 use std::fmt;
 
@@ -11,7 +12,7 @@ const NINTENDO_LOGO: [u8; NINTENDO_LOGO_SIZE] = [
 ];
 
 const VRAM_SIZE: usize = 0x2000;
-const OAM_SIZE: usize = 0x9f;
+pub const OAM_SIZE: usize = 0x9f;
 
 #[derive(PartialEq, Debug)]
 enum State {
@@ -33,6 +34,24 @@ pub struct Ppu {
     x: u8,
     y: u8,
     state: State,
+    /// Bit 7 - LCD Display Enable             (0=Off, 1=On)
+    /// Bit 6 - Window Tile Map Display Select (0=9800-9BFF, 1=9C00-9FFF)
+    /// Bit 5 - Window Display Enable          (0=Off, 1=On)
+    /// Bit 4 - BG & Window Tile Data Select   (0=8800-97FF, 1=8000-8FFF)
+    /// Bit 3 - BG Tile Map Display Select     (0=9800-9BFF, 1=9C00-9FFF)
+    /// Bit 2 - OBJ (Sprite) Size              (0=8x8, 1=8x16)
+    /// Bit 1 - OBJ (Sprite) Display Enable    (0=Off, 1=On)
+    /// Bit 0 - BG Display (for CGB see below) (0=Off, 1=On)
+    lcd_control: u8,
+    lcd_status: u8,
+    scroll_x: u8,
+    scroll_y: u8,
+    lyc: u8,
+    bg_palette_data: u8,
+    object_palette_0_data: u8,
+    object_palette_1_data: u8,
+    window_y_position: u8,
+    window_x_position_minus_7: u8,
 }
 
 impl fmt::Display for Ppu {
@@ -49,10 +68,22 @@ impl Ppu {
             x: 0,
             y: 0,
             state: State::OAMSearch,
+            lcd_control: 0,
+            lcd_status: 0,
+            scroll_x: 0,
+            scroll_y: 0,
+            lyc: 0,
+            bg_palette_data: 0,
+            object_palette_0_data: 0,
+            object_palette_1_data: 0,
+            window_y_position: 0,
+            window_x_position_minus_7: 0,
         }
     }
 
     pub fn next(&mut self) {
+        // TODO : compare LY and LYC?
+
         self.x += 1;
         if self.x == 160 {
             self.x = 0;
@@ -84,5 +115,42 @@ impl Ppu {
 
     pub fn write_oam(&mut self, address: usize, value: u8) {
         self.oam[address] = value;
+    }
+
+    pub fn read_registers(&self, address: u16) -> u8 {
+        match address {
+            0xff40 => self.lcd_control,
+            0xff41 => self.lcd_status,
+            0xff42 => self.scroll_x,
+            0xff43 => self.scroll_y,
+            0xff44 => self.y,
+            0xff45 => self.lyc,
+            0xff47 => self.bg_palette_data,
+            0xff48 => self.object_palette_0_data,
+            0xff49 => self.object_palette_1_data,
+            0xff4a => self.window_y_position,
+            0xff4b => self.window_x_position_minus_7,
+            _ => panic!("Not a PPU register address or write-only"),
+        }
+    }
+
+    pub fn write_registers(&mut self, address: u16, value: u8) {
+        match address {
+            0xff40 => self.lcd_control = value,
+            0xff41 => self.lcd_status = (value & 0xfb) | (self.lcd_status & 0x03),
+            0xff42 => self.scroll_x = value,
+            0xff43 => self.scroll_y = value,
+            0xff45 => self.lyc = value,
+            0xff47 => self.bg_palette_data = value,
+            0xff48 => self.object_palette_0_data = value,
+            0xff49 => self.object_palette_1_data = value,
+            0xff4a => self.window_y_position = value,
+            0xff4b => self.window_x_position_minus_7 = value,
+            _ => panic!("Not a PPU register address or read-only"),
+        }
+    }
+
+    pub fn set_oam(&mut self, data: [u8; OAM_SIZE]) {
+        self.oam = data.clone();
     }
 }

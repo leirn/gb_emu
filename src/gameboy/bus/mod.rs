@@ -18,7 +18,7 @@ const BOOT_SEQUENCE: [u8; BOOT_SEQUENCE_SIZE] = [
     0xf5, 0x06, 0x19, 0x78, 0x86, 0x23, 0x05, 0x20, 0xfb, 0x86, 0x20, 0xfe, 0x3e, 0x01, 0xe0, 0x50,
 ];
 
-use crate::gameboy::ppu::Ppu;
+use crate::gameboy::ppu::{Ppu, OAM_SIZE};
 
 use super::cartridge::Cartridge;
 
@@ -68,7 +68,7 @@ impl Bus {
     /// ff00-ff7f : I/O
     /// ff80-fffe : hiram
     /// ffff-ffff : interrupt enable register
-    pub fn read_8(&self, address: u16) -> u8 {
+    pub fn read_8(&mut self, address: u16) -> u8 {
         match address {
             0x0000..=0x3fff => {
                 if self.boot_rom_enabled > 0 && address < 0x100 {
@@ -83,12 +83,12 @@ impl Bus {
             0xc000..=0xdfff => self.ram[(address - 0xc000) as usize],
             0xe000..=0xfdff => self.ram[(address - 0xe000) as usize],
             0xfe00..=0xfe9f => self.ppu.read_oam((address - 0xfe00) as usize),
-            0xff00 => 0,          // joypad
-            0xff01..=0xff02 => 0, // serial transfer
-            0xff04..=0xff07 => 0, // time and divider
-            0xff10..=0xff26 => 0, // audio
-            0xff30..=0xff3f => 0, // wave pattern
-            0xff40..=0xff4b => 0, // lcd
+            0xff00 => 0,                                         // joypad
+            0xff01..=0xff02 => 0,                                // serial transfer
+            0xff04..=0xff07 => 0,                                // time and divider
+            0xff10..=0xff26 => 0,                                // audio
+            0xff30..=0xff3f => 0,                                // wave pattern
+            0xff40..=0xff4b => self.ppu.read_registers(address), // lcd
             0xff50 => self.boot_rom_enabled,
             0xff80..=0xfffe => self.hiram[(address - 0xff80) as usize],
             0xffff => self.interrupt_enabled,
@@ -113,7 +113,15 @@ impl Bus {
             0xff04..=0xff07 => (), // time and divider
             0xff10..=0xff26 => (), // audio
             0xff30..=0xff3f => (), // wave pattern
-            0xff40..=0xff4b => (), // lcd
+            0xff40..=0xff45 => self.ppu.write_registers(address, value), // lcd
+            0xff46 => {
+                let mut data = [0_u8; OAM_SIZE];
+                for i in 0..0x100 {
+                    data[i] = self.read_8((address << 8) + i as u16);
+                }
+                self.ppu.set_oam(data)
+            } // Start DMA transfer
+            0xff47..=0xff4b => self.ppu.write_registers(address, value), // lcd
             0xff50 => self.boot_rom_enabled = value,
             0xff80..=0xfffe => self.hiram[(address - 0xff80) as usize] = value,
             0xffff => self.interrupt_enabled = value,
@@ -121,7 +129,7 @@ impl Bus {
         }
     }
 
-    pub fn read_16(&self, address: u16) -> u16 {
+    pub fn read_16(&mut self, address: u16) -> u16 {
         (self.read_8(address + 1) as u16) << 8 | (self.read_8(address) as u16)
     }
 
