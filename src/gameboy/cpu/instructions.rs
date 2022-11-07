@@ -11,11 +11,6 @@ pub struct Instruction {
     pub operation: fn(cpu: &mut Cpu) -> usize,
 }
 
-#[derive(PartialEq)]
-pub enum InstructionMode {
-    Implied,
-}
-
 #[derive(PartialEq, Debug)]
 pub enum InstructionCode {
     NOP,
