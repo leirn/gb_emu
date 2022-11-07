@@ -647,448 +647,640 @@ pub const CB_INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::B, 0);
+            0
+        },
     },
     Instruction {
         opcode: 0x41,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::C, 0);
+            0
+        },
     },
     Instruction {
         opcode: 0x42,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::D, 0);
+            0
+        },
     },
     Instruction {
         opcode: 0x43,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::E, 0);
+            0
+        },
     },
     Instruction {
         opcode: 0x44,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::H, 0);
+            0
+        },
     },
     Instruction {
         opcode: 0x45,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::L, 0);
+            0
+        },
     },
     Instruction {
         opcode: 0x46,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [12, 12],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::IndirectHL, 0);
+            0
+        },
     },
     Instruction {
         opcode: 0x47,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::A, 0);
+            0
+        },
     },
     Instruction {
         opcode: 0x48,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::B, 1);
+            0
+        },
     },
     Instruction {
         opcode: 0x49,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::C, 1);
+            0
+        },
     },
     Instruction {
         opcode: 0x4A,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::D, 1);
+            0
+        },
     },
     Instruction {
         opcode: 0x4B,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::E, 1);
+            0
+        },
     },
     Instruction {
         opcode: 0x4C,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::H, 1);
+            0
+        },
     },
     Instruction {
         opcode: 0x4D,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::L, 1);
+            0
+        },
     },
     Instruction {
         opcode: 0x4E,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [12, 12],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::IndirectHL, 1);
+            0
+        },
     },
     Instruction {
         opcode: 0x4F,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::A, 1);
+            0
+        },
     },
     Instruction {
         opcode: 0x50,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::B, 2);
+            0
+        },
     },
     Instruction {
         opcode: 0x51,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::C, 2);
+            0
+        },
     },
     Instruction {
         opcode: 0x52,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::D, 2);
+            0
+        },
     },
     Instruction {
         opcode: 0x53,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::E, 2);
+            0
+        },
     },
     Instruction {
         opcode: 0x54,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::H, 2);
+            0
+        },
     },
     Instruction {
         opcode: 0x55,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::L, 2);
+            0
+        },
     },
     Instruction {
         opcode: 0x56,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [12, 12],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::IndirectHL, 2);
+            0
+        },
     },
     Instruction {
         opcode: 0x57,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::A, 2);
+            0
+        },
     },
     Instruction {
         opcode: 0x58,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::B, 3);
+            0
+        },
     },
     Instruction {
         opcode: 0x59,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::C, 3);
+            0
+        },
     },
     Instruction {
         opcode: 0x5A,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::D, 3);
+            0
+        },
     },
     Instruction {
         opcode: 0x5B,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::E, 3);
+            0
+        },
     },
     Instruction {
         opcode: 0x5C,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::H, 3);
+            0
+        },
     },
     Instruction {
         opcode: 0x5D,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::L, 3);
+            0
+        },
     },
     Instruction {
         opcode: 0x5E,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [12, 12],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::IndirectHL, 3);
+            0
+        },
     },
     Instruction {
         opcode: 0x5F,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::A, 3);
+            0
+        },
     },
     Instruction {
         opcode: 0x60,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::B, 4);
+            0
+        },
     },
     Instruction {
         opcode: 0x61,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::C, 4);
+            0
+        },
     },
     Instruction {
         opcode: 0x62,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::D, 4);
+            0
+        },
     },
     Instruction {
         opcode: 0x63,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::E, 4);
+            0
+        },
     },
     Instruction {
         opcode: 0x64,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::H, 4);
+            0
+        },
     },
     Instruction {
         opcode: 0x65,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::L, 4);
+            0
+        },
     },
     Instruction {
         opcode: 0x66,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [12, 12],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::IndirectHL, 4);
+            0
+        },
     },
     Instruction {
         opcode: 0x67,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::A, 4);
+            0
+        },
     },
     Instruction {
         opcode: 0x68,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::B, 5);
+            0
+        },
     },
     Instruction {
         opcode: 0x69,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::C, 5);
+            0
+        },
     },
     Instruction {
         opcode: 0x6A,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::D, 5);
+            0
+        },
     },
     Instruction {
         opcode: 0x6B,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::E, 5);
+            0
+        },
     },
     Instruction {
         opcode: 0x6C,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::H, 5);
+            0
+        },
     },
     Instruction {
         opcode: 0x6D,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::L, 5);
+            0
+        },
     },
     Instruction {
         opcode: 0x6E,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [12, 12],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::IndirectHL, 5);
+            0
+        },
     },
     Instruction {
         opcode: 0x6F,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::A, 5);
+            0
+        },
     },
     Instruction {
         opcode: 0x70,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::B, 6);
+            0
+        },
     },
     Instruction {
         opcode: 0x71,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::C, 6);
+            0
+        },
     },
     Instruction {
         opcode: 0x72,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::D, 6);
+            0
+        },
     },
     Instruction {
         opcode: 0x73,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::E, 6);
+            0
+        },
     },
     Instruction {
         opcode: 0x74,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::H, 6);
+            0
+        },
     },
     Instruction {
         opcode: 0x75,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::L, 6);
+            0
+        },
     },
     Instruction {
         opcode: 0x76,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [12, 12],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::IndirectHL, 6);
+            0
+        },
     },
     Instruction {
         opcode: 0x77,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::A, 6);
+            0
+        },
     },
     Instruction {
         opcode: 0x78,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::B, 7);
+            0
+        },
     },
     Instruction {
         opcode: 0x79,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::C, 7);
+            0
+        },
     },
     Instruction {
         opcode: 0x7A,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::D, 7);
+            0
+        },
     },
     Instruction {
         opcode: 0x7B,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::E, 7);
+            0
+        },
     },
     Instruction {
         opcode: 0x7C,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::H, 7);
+            0
+        },
     },
     Instruction {
         opcode: 0x7D,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::L, 7);
+            0
+        },
     },
     Instruction {
         opcode: 0x7E,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [12, 12],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::IndirectHL, 7);
+            0
+        },
     },
     Instruction {
         opcode: 0x7F,
         name: InstructionCode::BIT,
         length: 2,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.bit(RegisterNames::A, 7);
+            0
+        },
     },
     Instruction {
         opcode: 0x80,

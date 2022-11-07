@@ -414,7 +414,7 @@ impl Cpu {
 
     /// Set bit *bit_index* in *register register*
     fn set(&mut self, register: RegisterNames, bit_index: u8) {
-        let mask = (1_u8 << bit_index);
+        let mask = 1_u8 << bit_index;
         match register {
             RegisterNames::A => self.registers.a |= mask,
             RegisterNames::B => self.registers.b |= mask,
@@ -434,20 +434,66 @@ impl Cpu {
     fn swap(&mut self, register: RegisterNames) {
         let swap_internal = |value: u8| ((value & 0x0f) << 4) | ((value & 0xf0) >> 4);
 
-        match register {
-            RegisterNames::A => self.registers.a = swap_internal(self.registers.a),
-            RegisterNames::B => self.registers.b = swap_internal(self.registers.b),
-            RegisterNames::C => self.registers.c = swap_internal(self.registers.c),
-            RegisterNames::D => self.registers.d = swap_internal(self.registers.d),
-            RegisterNames::E => self.registers.e = swap_internal(self.registers.e),
-            RegisterNames::H => self.registers.h = swap_internal(self.registers.h),
-            RegisterNames::L => self.registers.l = swap_internal(self.registers.l),
+        self.flags.clear_flags();
+
+        let value = match register {
+            RegisterNames::A => {
+                self.registers.a = swap_internal(self.registers.a);
+                self.registers.a
+            }
+            RegisterNames::B => {
+                self.registers.b = swap_internal(self.registers.b);
+                self.registers.b
+            }
+            RegisterNames::C => {
+                self.registers.c = swap_internal(self.registers.c);
+                self.registers.c
+            }
+            RegisterNames::D => {
+                self.registers.d = swap_internal(self.registers.d);
+                self.registers.d
+            }
+            RegisterNames::E => {
+                self.registers.e = swap_internal(self.registers.e);
+                self.registers.e
+            }
+            RegisterNames::H => {
+                self.registers.h = swap_internal(self.registers.h);
+                self.registers.h
+            }
+            RegisterNames::L => {
+                self.registers.l = swap_internal(self.registers.l);
+                self.registers.l
+            }
             RegisterNames::IndirectHL => {
                 let hl = self.registers.get_hl();
                 let value = self.get_value_at(hl);
                 let value = swap_internal(value);
                 self.set_value_at(hl, value);
+                value
             }
-        }
+        };
+        self.flags.set_zero(value);
+    }
+
+    fn bit(&mut self, register: RegisterNames, bit_index: u8) {
+        self.flags.negative = false;
+        self.flags.half_carry = true;
+
+        let value = match register {
+            RegisterNames::A => self.registers.a,
+            RegisterNames::B => self.registers.b,
+            RegisterNames::C => self.registers.c,
+            RegisterNames::D => self.registers.d,
+            RegisterNames::E => self.registers.e,
+            RegisterNames::H => self.registers.h,
+            RegisterNames::L => self.registers.l,
+            RegisterNames::IndirectHL => {
+                let hl = self.registers.get_hl();
+                self.get_value_at(hl)
+            }
+        };
+
+        self.flags.zero = (value >> bit_index) & 0x1 == 0x0;
     }
 }
