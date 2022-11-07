@@ -5,7 +5,7 @@ mod registers;
 
 use crate::gameboy::bus::Bus;
 use flags::Flags;
-use instructions::{InstructionCode, INSTRUCTION_TABLE};
+use instructions::INSTRUCTION_TABLE;
 use registers::Registers;
 use std::fmt;
 
