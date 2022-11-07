@@ -1,5 +1,7 @@
 // http://blog.kevtris.org/blogfiles/Nitty%20Gritty%20Gameboy%20VRAM%20Timing.txt
 
+use std::fmt;
+
 const NINTENDO_LOGO_SIZE: usize = 0x30;
 
 const NINTENDO_LOGO: [u8; NINTENDO_LOGO_SIZE] = [
@@ -11,9 +13,32 @@ const NINTENDO_LOGO: [u8; NINTENDO_LOGO_SIZE] = [
 const VRAM_SIZE: usize = 0x2000;
 const OAM_SIZE: usize = 0x9f;
 
+#[derive(PartialEq, Debug)]
+enum State {
+    OAMSearch,
+    PixelTransfer,
+    HBlank,
+    VBlank,
+}
+
+impl fmt::Display for State {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 pub struct Ppu {
     vram: [u8; VRAM_SIZE],
     oam: [u8; OAM_SIZE],
+    x: u8,
+    y: u8,
+    state: State,
+}
+
+impl fmt::Display for Ppu {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "X:{}, Y:{}, state:{}", self.x, self.y, self.state)
+    }
 }
 
 impl Ppu {
@@ -21,6 +46,27 @@ impl Ppu {
         Ppu {
             vram: [(); VRAM_SIZE].map(|_| 0),
             oam: [0; OAM_SIZE],
+            x: 0,
+            y: 0,
+            state: State::OAMSearch,
+        }
+    }
+
+    pub fn next(&mut self) {
+        self.x += 1;
+        if self.x == 160 {
+            self.x = 0;
+            self.y += 1;
+            if self.y == 144 {
+                self.state = State::VBlank;
+            } else if self.y == 153 {
+                self.y = 0;
+                self.state = State::OAMSearch
+            }
+        } else if self.x == 20 && self.state == State::OAMSearch {
+            self.state = State::PixelTransfer;
+        } else if self.x == 20 && self.state == State::PixelTransfer {
+            self.state = State::HBlank;
         }
     }
 

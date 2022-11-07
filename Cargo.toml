@@ -12,7 +12,15 @@ license = "MIT"
 [dependencies]
 argparse = "0.2.2"
 
-
-
 [dependencies.sdl2]
 version = "0.35.2"
+
+[profile.dev]
+overflow-checks = false
+opt-level = 0
+
+[profile.release]
+opt-level = 3
+overflow-checks = false
+codegen-units = 1 # Useful for optimizing code
+panic = "abort"

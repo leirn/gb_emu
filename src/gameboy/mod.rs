@@ -45,9 +45,12 @@ impl GameBoy {
 
         self.cpu.bus.load_boot_rom();
         self.cpu.registers.pc = 0x0000;
-
+        let sleep_time = std::time::Duration::from_millis(10);
         loop {
             self.cpu.next();
+            self.cpu.bus.ppu.next();
+            println!("{}", self.cpu.bus.ppu);
+            std::thread::sleep(sleep_time);
         }
     }
 }

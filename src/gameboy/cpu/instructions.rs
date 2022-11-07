@@ -11,6 +11,16 @@ pub struct Instruction {
     pub operation: fn(cpu: &mut Cpu) -> usize,
 }
 
+impl fmt::Display for Instruction {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if self.name == InstructionCode::PREFIX {
+            write!(f, "{}", CB_INSTRUCTION_TABLE[self.opcode as usize])
+        } else {
+            write!(f, "{}", self.name)
+        }
+    }
+}
+
 #[derive(PartialEq, Debug)]
 pub enum InstructionCode {
     NOP,
@@ -320,7 +330,11 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::JR,
         length: 2,
         cycles: [12, 12],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            let signed_value = cpu.get_immediate() as i8;
+            cpu.registers.pc = cpu.registers.pc.wrapping_add(signed_value as u16);
+            0
+        },
     },
     Instruction {
         opcode: 0x19,
@@ -395,7 +409,15 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::JR,
         length: 2,
         cycles: [12, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            let signed_value = cpu.get_immediate() as i8;
+            if !cpu.flags.zero {
+                cpu.registers.pc = cpu.registers.pc.wrapping_add(signed_value as u16);
+                0
+            } else {
+                1
+            }
+        },
     },
     Instruction {
         opcode: 0x21,
@@ -471,7 +493,15 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::JR,
         length: 2,
         cycles: [12, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            let signed_value = cpu.get_immediate() as i8;
+            if cpu.flags.zero {
+                cpu.registers.pc = cpu.registers.pc.wrapping_add(signed_value as u16);
+                0
+            } else {
+                1
+            }
+        },
     },
     Instruction {
         opcode: 0x29,
@@ -543,7 +573,15 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::JR,
         length: 2,
         cycles: [12, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            let signed_value = cpu.get_immediate() as i8;
+            if !cpu.flags.carry {
+                cpu.registers.pc = cpu.registers.pc.wrapping_add(signed_value as u16);
+                0
+            } else {
+                1
+            }
+        },
     },
     Instruction {
         opcode: 0x31,
@@ -619,7 +657,15 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::JR,
         length: 2,
         cycles: [12, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            let signed_value = cpu.get_immediate() as i8;
+            if cpu.flags.carry {
+                cpu.registers.pc = cpu.registers.pc.wrapping_add(signed_value as u16);
+                0
+            } else {
+                1
+            }
+        },
     },
     Instruction {
         opcode: 0x39,
@@ -2002,8 +2048,9 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         length: 3,
         cycles: [16, 12],
         operation: |cpu| {
+            let value = cpu.get_immediate_16();
             if !cpu.flags.zero {
-                cpu.registers.pc = cpu.get_immediate_16();
+                cpu.registers.pc = value;
                 0
             } else {
                 1
@@ -2095,8 +2142,9 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         length: 3,
         cycles: [16, 12],
         operation: |cpu| {
+            let value = cpu.get_immediate_16();
             if cpu.flags.zero {
-                cpu.registers.pc = cpu.get_immediate_16();
+                cpu.registers.pc = value;
                 0
             } else {
                 1
@@ -2106,15 +2154,11 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
     Instruction {
         opcode: 0xCB,
         name: InstructionCode::PREFIX,
-        length: 1,
+        length: 2,
         cycles: [4, 4],
         operation: |cpu| {
-            cpu.registers.pc += 1;
-            let opcode = cpu.bus.read_8(cpu.registers.pc) as usize;
-
-            let instruction_result = (&CB_INSTRUCTION_TABLE[opcode].operation)(cpu);
-
-            instruction_result
+            let opcode = cpu.get_immediate() as usize;
+            (&CB_INSTRUCTION_TABLE[opcode].operation)(cpu)
         },
     },
     Instruction {
@@ -2194,8 +2238,9 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         length: 3,
         cycles: [16, 12],
         operation: |cpu| {
+            let value = cpu.get_immediate_16();
             if !cpu.flags.carry {
-                cpu.registers.pc = cpu.get_immediate_16();
+                cpu.registers.pc = value;
                 0
             } else {
                 1
@@ -2281,8 +2326,9 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         length: 3,
         cycles: [16, 12],
         operation: |cpu| {
+            let value = cpu.get_immediate_16();
             if cpu.flags.carry {
-                cpu.registers.pc = cpu.get_immediate_16();
+                cpu.registers.pc = value;
                 0
             } else {
                 1

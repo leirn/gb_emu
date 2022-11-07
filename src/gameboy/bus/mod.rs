@@ -20,14 +20,14 @@ const BOOT_SEQUENCE: [u8; BOOT_SEQUENCE_SIZE] = [
 
 use crate::gameboy::ppu::Ppu;
 
-use super::cartridge::{self, Cartridge};
+use super::cartridge::Cartridge;
 
 const RAM_SIZE: usize = 0x2000;
 const HIRAM_SIZE: usize = 0x80;
 
 pub struct Bus {
     ram: [u8; RAM_SIZE],
-    ppu: Ppu,
+    pub ppu: Ppu,
     cartridge: Cartridge,
     hiram: [u8; HIRAM_SIZE],
     interrupt_enabled: u8,

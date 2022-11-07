@@ -5,8 +5,9 @@ mod registers;
 
 use crate::gameboy::bus::Bus;
 use flags::Flags;
-use instructions::INSTRUCTION_TABLE;
+use instructions::{InstructionCode, INSTRUCTION_TABLE};
 use registers::Registers;
+use std::fmt;
 
 use self::registers::RegisterNames;
 
@@ -21,6 +22,12 @@ pub struct Cpu {
     interruption_enabled: bool,
     future_interruption_enabled: bool,
     switch_interruption_enabled_in: u8,
+}
+
+impl fmt::Display for Cpu {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Cycles:{},{}", self.total_cycles, self.registers)
+    }
 }
 
 impl Cpu {
@@ -57,29 +64,29 @@ impl Cpu {
             self.remaining_cycles -= 1;
             return;
         }
-        let opcode = self.bus.read_8(self.registers.pc) as usize;
 
-        println!(
-            "{:04x}  {:02x}  {}",
-            self.registers.pc, opcode, INSTRUCTION_TABLE[opcode].name
-        );
+        self.print_status();
+        let opcode = self.get_immediate() as usize;
 
         let instruction_result = (&INSTRUCTION_TABLE[opcode].operation)(self);
 
         self.remaining_cycles = INSTRUCTION_TABLE[opcode].cycles[instruction_result];
         self.total_cycles += self.remaining_cycles;
         self.remaining_cycles -= 1; // Do not count current cycle twice
-        self.registers.pc += &INSTRUCTION_TABLE[opcode].length;
     }
 
-    /// Get 8 bit immediate value on PC + 1
+    /// Get 8 bit immediate value on PC and increment PC of 1
     fn get_immediate(&mut self) -> u8 {
-        self.bus.read_8(self.registers.pc + 1)
+        let value = self.bus.read_8(self.registers.pc);
+        self.registers.pc += 1;
+        value
     }
 
-    /// Get 16 bit immediate value on PC + 1
+    /// Get 16 bit immediate value on PC and increment PC of 2
     fn get_immediate_16(&mut self) -> u16 {
-        self.bus.read_16(self.registers.pc + 1)
+        let value = self.bus.read_16(self.registers.pc);
+        self.registers.pc += 2;
+        value
     }
 
     fn get_value_at(&mut self, address: u16) -> u8 {
@@ -558,6 +565,7 @@ impl Cpu {
             }
         };
         self.flags.set_half_carry_8(old_value, new_value);
+        self.flags.set_zero(new_value);
     }
 
     fn dec(&mut self, register: RegisterNames) {
@@ -608,6 +616,7 @@ impl Cpu {
             }
         };
         self.flags.set_half_carry_8(old_value, new_value); // TODO - half borrow ?
+        self.flags.set_zero(new_value);
     }
 
     /// ei activate interrupt, but only in 3 cycles
@@ -625,5 +634,46 @@ impl Cpu {
     fn rst(&mut self, n: u16) {
         self.push(self.registers.pc);
         self.registers.pc = n;
+    }
+
+    fn print_status(&mut self) {
+        let opcode = self.bus.read_8(self.registers.pc) as usize;
+        if INSTRUCTION_TABLE[opcode].length == 1 {
+            println!(
+                "{:04x}  {:02x}        {:indent$}    {}   Flags:{:08b}",
+                self.registers.pc,
+                opcode,
+                INSTRUCTION_TABLE[opcode],
+                self,
+                self.flags.get_flags(),
+                indent = 30
+            );
+        } else if INSTRUCTION_TABLE[opcode].length == 2 {
+            let imm1 = self.get_value_at(self.registers.pc + 1);
+            println!(
+                "{:04x}  {:02x} {:02x}     {:indent$}    {}   Flags:{:08b}",
+                self.registers.pc,
+                opcode,
+                imm1,
+                INSTRUCTION_TABLE[opcode],
+                self,
+                self.flags.get_flags(),
+                indent = 30
+            );
+        } else if INSTRUCTION_TABLE[opcode].length == 3 {
+            let imm1 = self.get_value_at(self.registers.pc + 1);
+            let imm2 = self.get_value_at(self.registers.pc + 2);
+            println!(
+                "{:04x}  {:02x} {:02x} {:02x}  {:indent$}    {}   Flags:{:08b}",
+                self.registers.pc,
+                opcode,
+                imm1,
+                imm2,
+                INSTRUCTION_TABLE[opcode],
+                self,
+                self.flags.get_flags(),
+                indent = 30
+            );
+        }
     }
 }
