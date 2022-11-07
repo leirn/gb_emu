@@ -14,6 +14,11 @@ const NINTENDO_LOGO: [u8; NINTENDO_LOGO_SIZE] = [
 const VRAM_SIZE: usize = 0x2000;
 pub const OAM_SIZE: usize = 0x9f;
 
+enum SpriteSize {
+    Size8x8,
+    Size8x16,
+}
+
 #[derive(PartialEq, Debug)]
 enum State {
     OAMSearch,
@@ -137,7 +142,10 @@ impl Ppu {
     pub fn write_registers(&mut self, address: u16, value: u8) {
         match address {
             0xff40 => self.lcd_control = value,
-            0xff41 => self.lcd_status = (value & 0xfb) | (self.lcd_status & 0x03),
+            0xff41 => {
+                self.lcd_status =
+                    (value & 0xfb) | (self.get_lyc_ly_coincidence() as u8) << 2 | self.get_state()
+            }
             0xff42 => self.scroll_x = value,
             0xff43 => self.scroll_y = value,
             0xff45 => self.lyc = value,
@@ -150,7 +158,72 @@ impl Ppu {
         }
     }
 
+    fn get_lyc_ly_coincidence(&self) -> bool {
+        if (self.lcd_status >> 6) & 0x1 == 0x1 {
+            self.lyc == self.y
+        } else {
+            self.lyc != self.y
+        }
+    }
+
+    fn get_state(&self) -> u8 {
+        match self.state {
+            State::HBlank => 0,
+            State::VBlank => 1,
+            State::OAMSearch => 2,
+            State::PixelTransfer => 3,
+        }
+    }
+
     pub fn set_oam(&mut self, data: [u8; OAM_SIZE]) {
         self.oam = data.clone();
+    }
+
+    fn is_lcd_display_enabled(&self) -> bool {
+        (self.lcd_control >> 7) == 0x01
+    }
+
+    fn get_window_tile_map_display_selected(&self) -> u16 {
+        if (self.lcd_control >> 6) & 0x1 == 0x1 {
+            0x9c00
+        } else {
+            0x9800
+        }
+    }
+
+    fn is_window_display_enabled(&self) -> bool {
+        (self.lcd_control >> 5) & 0x1 == 0x1
+    }
+
+    fn get_bg_and_window_tile_dara_selected(&self) -> u16 {
+        if (self.lcd_control >> 4) & 0x1 == 0x1 {
+            0x8000
+        } else {
+            0x8800
+        }
+    }
+
+    fn get_bg_tile_map_display_selected(&self) -> u16 {
+        if (self.lcd_control >> 3) & 0x1 == 0x1 {
+            0x9c00
+        } else {
+            0x9800
+        }
+    }
+
+    fn get_sprite_obj_size(&self) -> SpriteSize {
+        if (self.lcd_control >> 2) & 0x1 == 0x1 {
+            SpriteSize::Size8x16
+        } else {
+            SpriteSize::Size8x8
+        }
+    }
+
+    fn is_sprite_obj_enabled(&self) -> bool {
+        (self.lcd_control >> 1) & 0x1 == 0x1
+    }
+
+    fn is_bg_enabled(&self) -> bool {
+        self.lcd_control & 0x1 == 0x1
     }
 }
