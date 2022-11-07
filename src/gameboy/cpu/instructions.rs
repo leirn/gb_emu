@@ -2001,14 +2001,24 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::JP,
         length: 3,
         cycles: [16, 12],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            if !cpu.flags.zero {
+                cpu.registers.pc = cpu.get_immediate_16();
+                0
+            } else {
+                1
+            }
+        },
     },
     Instruction {
         opcode: 0xC3,
         name: InstructionCode::JP,
         length: 3,
         cycles: [16, 16],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.registers.pc = cpu.get_immediate_16();
+            0
+        },
     },
     Instruction {
         opcode: 0xC4,
@@ -2050,7 +2060,10 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::RST,
         length: 1,
         cycles: [16, 16],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.rst(0);
+            0
+        },
     },
     Instruction {
         opcode: 0xC8,
@@ -2081,7 +2094,14 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::JP,
         length: 3,
         cycles: [16, 12],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            if cpu.flags.zero {
+                cpu.registers.pc = cpu.get_immediate_16();
+                0
+            } else {
+                1
+            }
+        },
     },
     Instruction {
         opcode: 0xCB,
@@ -2138,7 +2158,10 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::RST,
         length: 1,
         cycles: [16, 16],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.rst(0x08);
+            0
+        },
     },
     Instruction {
         opcode: 0xD0,
@@ -2170,7 +2193,14 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::JP,
         length: 3,
         cycles: [16, 12],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            if !cpu.flags.carry {
+                cpu.registers.pc = cpu.get_immediate_16();
+                0
+            } else {
+                1
+            }
+        },
     },
     Instruction {
         opcode: 0xD3,
@@ -2219,7 +2249,10 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::RST,
         length: 1,
         cycles: [16, 16],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.rst(0x10);
+            0
+        },
     },
     Instruction {
         opcode: 0xD8,
@@ -2247,7 +2280,14 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::JP,
         length: 3,
         cycles: [16, 12],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            if cpu.flags.carry {
+                cpu.registers.pc = cpu.get_immediate_16();
+                0
+            } else {
+                1
+            }
+        },
     },
     Instruction {
         opcode: 0xDB,
@@ -2293,7 +2333,10 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::RST,
         length: 1,
         cycles: [16, 16],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.rst(0x18);
+            0
+        },
     },
     Instruction {
         opcode: 0xE0,
@@ -2368,7 +2411,10 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::RST,
         length: 1,
         cycles: [16, 16],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.rst(0x20);
+            0
+        },
     },
     Instruction {
         opcode: 0xE8,
@@ -2382,7 +2428,11 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::JP,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            let address = cpu.registers.get_hl();
+            cpu.registers.pc = cpu.get_value_16_at(address);
+            0
+        },
     },
     Instruction {
         opcode: 0xEA,
@@ -2432,7 +2482,10 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::RST,
         length: 1,
         cycles: [16, 16],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.rst(0x28);
+            0
+        },
     },
     Instruction {
         opcode: 0xF0,
@@ -2510,7 +2563,10 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::RST,
         length: 1,
         cycles: [16, 16],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.rst(0x30);
+            0
+        },
     },
     Instruction {
         opcode: 0xF8,
@@ -2590,6 +2646,9 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::RST,
         length: 1,
         cycles: [16, 16],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.rst(0x38);
+            0
+        },
     },
 ];

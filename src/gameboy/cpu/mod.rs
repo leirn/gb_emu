@@ -621,4 +621,9 @@ impl Cpu {
         self.future_interruption_enabled = true;
         self.switch_interruption_enabled_in = 3;
     }
+
+    fn rst(&mut self, n: u16) {
+        self.push(self.registers.pc);
+        self.registers.pc = n;
+    }
 }
