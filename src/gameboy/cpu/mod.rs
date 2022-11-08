@@ -17,6 +17,12 @@ use self::registers::{RegisterNames, RegisterNames16b};
 
 use super::cartridge::Cartridge;
 
+const INTERRUPT_ADDRESS_VBLANK: u16 = 0x0040;
+const INTERRUPT_ADDRESS_STAT: u16 = 0x0048;
+const INTERRUPT_ADDRESS_TIMER: u16 = 0x0050;
+const INTERRUPT_ADDRESS_SERIAL: u16 = 0x0058;
+const INTERRUPT_ADDRESS_JOYPAD: u16 = 0x0060;
+
 pub struct Cpu<'a> {
     pub registers: Registers,
     pub flags: Flags,

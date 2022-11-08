@@ -19,7 +19,10 @@ const BOOT_SEQUENCE: [u8; BOOT_SEQUENCE_SIZE] = [
 ];
 
 mod controller;
+mod timer;
+
 use controller::Controller;
+use timer::Timer;
 
 use crate::gameboy::ppu::{Ppu, OAM_SIZE};
 
@@ -38,6 +41,7 @@ pub struct Bus<'a> {
     interrupt_enabled: u8,
     boot_rom_enabled: u8,
     pub controller: Controller,
+    pub timer: Timer,
 }
 
 impl Bus<'_> {
@@ -49,7 +53,8 @@ impl Bus<'_> {
             hiram: [0; HIRAM_SIZE],
             interrupt_enabled: 0,
             boot_rom_enabled: 1,
-            controller: Controller::default(),
+            controller: Controller::new(),
+            timer: Timer::default(),
         }
     }
 
@@ -92,7 +97,10 @@ impl Bus<'_> {
             0xfe00..=0xfe9f => self.ppu.read_oam((address - 0xfe00) as usize),
             0xff00 => self.controller.get_controller_status(), // joypad
             0xff01..=0xff02 => 0,                              // serial transfer
-            0xff04..=0xff07 => 0,                              // time and divider
+            0xff04 => self.timer.get_div(),                    // time and divider
+            0xff05 => self.timer.get_tima(),                   // time and divider
+            0xff06 => self.timer.get_tma(),                    // time and divider
+            0xff07 => self.timer.get_tac(),                    // time and divider
             0xff10..=0xff26 => 0,                              // audio
             0xff30..=0xff3f => 0,                              // wave pattern
             0xff40..=0xff4b => self.ppu.read_registers(address), // lcd
@@ -118,7 +126,10 @@ impl Bus<'_> {
             0xfe00..=0xfe9f => self.ppu.write_oam((address - 0xfe00) as usize, value),
             0xff00 => self.controller.set_controller_status(value), // joypad
             0xff01..=0xff02 => (),                                  // serial transfer
-            0xff04..=0xff07 => (),                                  // time and divider
+            0xff04 => self.timer.set_div(value),                    // time and divider
+            0xff05 => self.timer.set_tima(value),                   // time and divider
+            0xff06 => self.timer.set_tma(value),                    // time and divider
+            0xff07 => self.timer.set_tac(value),                    // time and divider
             0xff10..=0xff26 => (),                                  // audio
             0xff30..=0xff3f => (),                                  // wave pattern
             0xff40..=0xff45 => self.ppu.write_registers(address, value), // lcd

@@ -63,9 +63,13 @@ impl GameBoy<'_> {
             // 4 cpu clock tick per ppu clock tick ?
             if !self.paused {
                 if !self.cpu.is_halted {
+                    self.cpu.bus.timer.tick();
                     self.cpu.next();
+                    self.cpu.bus.timer.tick();
                     self.cpu.next();
+                    self.cpu.bus.timer.tick();
                     self.cpu.next();
+                    self.cpu.bus.timer.tick();
                     self.cpu.next();
                 }
                 self.cpu.bus.ppu.next();
