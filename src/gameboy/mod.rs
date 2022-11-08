@@ -13,6 +13,8 @@ use std::rc::Rc;
 pub struct GameBoy<'a> {
     cpu: Cpu<'a>,
     sdl_context: Rc<RefCell<sdl2::Sdl>>,
+    running: bool,
+    paused: bool,
 }
 
 impl GameBoy<'_> {
@@ -21,6 +23,8 @@ impl GameBoy<'_> {
         GameBoy {
             cpu: Cpu::new(_sdl_context.clone()),
             sdl_context: _sdl_context,
+            running: true,
+            paused: false,
         }
     }
 
@@ -53,37 +57,108 @@ impl GameBoy<'_> {
 
         self.cpu.bus.load_boot_rom();
         self.cpu.registers.pc = 0x0000;
-        //let sleep_time = std::time::Duration::from_millis(100);
+        let sleep_time = std::time::Duration::from_millis(1000);
 
-        let mut running: bool = true;
-        let mut paused: bool = false;
-
-        while running {
+        while self.running {
             // 4 cpu clock tick per ppu clock tick ?
-            if !paused {
-                self.cpu.next();
-                self.cpu.next();
-                self.cpu.next();
-                self.cpu.next();
+            if !self.paused {
+                if !self.cpu.is_halted {
+                    self.cpu.next();
+                    self.cpu.next();
+                    self.cpu.next();
+                    self.cpu.next();
+                }
                 self.cpu.bus.ppu.next();
                 //println!("{}", self.cpu.bus.ppu);
-                //std::thread::sleep(sleep_time);
+                std::thread::sleep(sleep_time);
             }
-            let mut event_pump = self.sdl_context.borrow_mut().event_pump().unwrap();
-            for event in event_pump.poll_iter() {
-                match event {
-                    Event::Quit { .. }
-                    | Event::KeyDown {
-                        keycode: Some(Keycode::Q),
-                        ..
-                    } => running = false,
-                    Event::KeyDown {
-                        keycode: Some(Keycode::P),
-                        ..
-                    } => paused = !paused,
-                    _ => (),
+
+            self.event_handler();
+        }
+    }
+
+    fn event_handler(&mut self) {
+        let mut event_pump = self.sdl_context.borrow_mut().event_pump().unwrap();
+        for event in event_pump.poll_iter() {
+            match event {
+                Event::Quit { .. }
+                | Event::KeyDown {
+                    keycode: Some(Keycode::Q),
+                    ..
+                } => self.running = false,
+                Event::KeyDown {
+                    keycode: Some(Keycode::P),
+                    ..
+                } => self.paused = !self.paused,
+                Event::KeyDown {
+                    keycode: Some(Keycode::Up),
+                    ..
                 }
+                | Event::KeyDown {
+                    keycode: Some(Keycode::Down),
+                    ..
+                }
+                | Event::KeyDown {
+                    keycode: Some(Keycode::Left),
+                    ..
+                }
+                | Event::KeyDown {
+                    keycode: Some(Keycode::Right),
+                    ..
+                } => {
+                    let keycode = match event {
+                        Event::KeyDown { keycode, .. } => keycode,
+                        _ => panic!(""),
+                    }
+                    .unwrap();
+                    self.handle_controller_event_down(keycode);
+                }
+                Event::KeyUp {
+                    keycode: Some(Keycode::Up),
+                    ..
+                }
+                | Event::KeyUp {
+                    keycode: Some(Keycode::Down),
+                    ..
+                }
+                | Event::KeyUp {
+                    keycode: Some(Keycode::Left),
+                    ..
+                }
+                | Event::KeyUp {
+                    keycode: Some(Keycode::Right),
+                    ..
+                } => {
+                    let keycode = match event {
+                        Event::KeyUp { keycode, .. } => keycode,
+                        _ => panic!(""),
+                    }
+                    .unwrap();
+                    self.handle_controller_event_up(keycode);
+                }
+                _ => (),
             }
+        }
+    }
+
+    fn handle_controller_event_up(&mut self, keycode: Keycode) {
+        self.cpu.is_halted = false;
+        match keycode {
+            Keycode::Up => self.cpu.bus.controller.up = true,
+            Keycode::Down => self.cpu.bus.controller.down = true,
+            Keycode::Left => self.cpu.bus.controller.left = true,
+            Keycode::Right => self.cpu.bus.controller.right = true,
+            _ => (),
+        }
+    }
+
+    fn handle_controller_event_down(&mut self, keycode: Keycode) {
+        match keycode {
+            Keycode::Up => self.cpu.bus.controller.up = false,
+            Keycode::Down => self.cpu.bus.controller.down = false,
+            Keycode::Left => self.cpu.bus.controller.left = false,
+            Keycode::Right => self.cpu.bus.controller.right = false,
+            _ => (),
         }
     }
 }

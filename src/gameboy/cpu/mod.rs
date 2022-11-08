@@ -26,6 +26,7 @@ pub struct Cpu<'a> {
     interruption_enabled: bool,
     future_interruption_enabled: bool,
     switch_interruption_enabled_in: u8,
+    pub is_halted: bool,
 }
 
 impl fmt::Display for Cpu<'_> {
@@ -45,6 +46,7 @@ impl Cpu<'_> {
             interruption_enabled: true,
             future_interruption_enabled: true,
             switch_interruption_enabled_in: 0,
+            is_halted: false,
         }
     }
 
@@ -668,6 +670,10 @@ impl Cpu<'_> {
         self.registers.a = !self.registers.a;
         self.flags.negative = true;
         self.flags.half_carry = true;
+    }
+
+    fn halt(&mut self) {
+        self.is_halted = true;
     }
 
     fn print_status(&mut self) {

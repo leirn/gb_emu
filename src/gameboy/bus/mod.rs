@@ -18,6 +18,9 @@ const BOOT_SEQUENCE: [u8; BOOT_SEQUENCE_SIZE] = [
     0xf5, 0x06, 0x19, 0x78, 0x86, 0x23, 0x05, 0x20, 0xfb, 0x86, 0x20, 0xfe, 0x3e, 0x01, 0xe0, 0x50,
 ];
 
+mod controller;
+use controller::Controller;
+
 use crate::gameboy::ppu::{Ppu, OAM_SIZE};
 
 use super::cartridge::Cartridge;
@@ -34,6 +37,7 @@ pub struct Bus<'a> {
     hiram: [u8; HIRAM_SIZE],
     interrupt_enabled: u8,
     boot_rom_enabled: u8,
+    pub controller: Controller,
 }
 
 impl Bus<'_> {
@@ -45,6 +49,7 @@ impl Bus<'_> {
             hiram: [0; HIRAM_SIZE],
             interrupt_enabled: 0,
             boot_rom_enabled: 1,
+            controller: Controller::default(),
         }
     }
 
@@ -85,11 +90,11 @@ impl Bus<'_> {
             0xc000..=0xdfff => self.ram[(address - 0xc000) as usize],
             0xe000..=0xfdff => self.ram[(address - 0xe000) as usize],
             0xfe00..=0xfe9f => self.ppu.read_oam((address - 0xfe00) as usize),
-            0xff00 => 0,                                         // joypad
-            0xff01..=0xff02 => 0,                                // serial transfer
-            0xff04..=0xff07 => 0,                                // time and divider
-            0xff10..=0xff26 => 0,                                // audio
-            0xff30..=0xff3f => 0,                                // wave pattern
+            0xff00 => self.controller.get_controller_status(), // joypad
+            0xff01..=0xff02 => 0,                              // serial transfer
+            0xff04..=0xff07 => 0,                              // time and divider
+            0xff10..=0xff26 => 0,                              // audio
+            0xff30..=0xff3f => 0,                              // wave pattern
             0xff40..=0xff4b => self.ppu.read_registers(address), // lcd
             0xff50 => self.boot_rom_enabled,
             0xff80..=0xfffe => self.hiram[(address - 0xff80) as usize],
@@ -111,10 +116,11 @@ impl Bus<'_> {
             0xc000..=0xdfff => self.ram[(address - 0xc000) as usize] = value,
             0xe000..=0xfdff => self.ram[(address - 0xe000) as usize] = value,
             0xfe00..=0xfe9f => self.ppu.write_oam((address - 0xfe00) as usize, value),
-            0xff01..=0xff02 => (), // serial transfer
-            0xff04..=0xff07 => (), // time and divider
-            0xff10..=0xff26 => (), // audio
-            0xff30..=0xff3f => (), // wave pattern
+            0xff00 => self.controller.set_controller_status(value), // joypad
+            0xff01..=0xff02 => (),                                  // serial transfer
+            0xff04..=0xff07 => (),                                  // time and divider
+            0xff10..=0xff26 => (),                                  // audio
+            0xff30..=0xff3f => (),                                  // wave pattern
             0xff40..=0xff45 => self.ppu.write_registers(address, value), // lcd
             0xff46 => {
                 let mut data = [0_u8; OAM_SIZE];

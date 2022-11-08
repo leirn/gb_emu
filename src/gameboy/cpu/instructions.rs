@@ -1299,7 +1299,10 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::HALT,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.halt();
+            0
+        },
     },
     Instruction {
         opcode: 0x77,
