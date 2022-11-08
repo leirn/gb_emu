@@ -16,7 +16,7 @@ impl Timer {
         (self.divider_register >> 8) as u8
     }
 
-    pub fn set_div(&mut self, value: u8) {
+    pub fn set_div(&mut self, _value: u8) {
         self.divider_register = 0;
     }
 
@@ -24,16 +24,14 @@ impl Timer {
         self.time_counter
     }
 
-    pub fn set_tima(&mut self, value: u8) {
-        self.time_counter = 0;
-    }
+    pub fn set_tima(&mut self, _value: u8) {}
 
     pub fn get_tma(&self) -> u8 {
         self.time_modulo
     }
 
     pub fn set_tma(&mut self, value: u8) {
-        self.time_modulo = 0;
+        self.time_modulo = value;
     }
 
     pub fn get_tac(&self) -> u8 {
