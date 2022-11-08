@@ -4,6 +4,7 @@ mod instructions;
 mod registers;
 
 use crate::gameboy::bus::Bus;
+use cb_instructions::CB_INSTRUCTION_TABLE;
 use flags::Flags;
 use instructions::INSTRUCTION_TABLE;
 use registers::Registers;
@@ -11,7 +12,8 @@ use std::cell::RefCell;
 use std::fmt;
 use std::rc::Rc;
 
-use self::registers::RegisterNames;
+use self::instructions::InstructionCode;
+use self::registers::{RegisterNames, RegisterNames16b};
 
 use super::cartridge::Cartridge;
 
@@ -135,6 +137,11 @@ impl Cpu<'_> {
         self.registers.pc = address;
     }
 
+    fn reti(&mut self) {
+        self.ret();
+        self.interruption_enabled = true;
+    }
+
     fn xor(&mut self, value: u8) {
         self.registers.a ^= value;
         self.flags.clear_flags();
@@ -159,6 +166,27 @@ impl Cpu<'_> {
         self.flags.set_half_carry_8(self.registers.a, value);
         (self.registers.a, self.flags.carry) = self.registers.a.overflowing_add(value);
         self.flags.set_zero(self.registers.a);
+    }
+
+    fn add_16b_register_to_hl(&mut self, register: RegisterNames16b) {
+        let mut value = match register {
+            RegisterNames16b::BC => self.registers.get_bc(),
+            RegisterNames16b::DE => self.registers.get_de(),
+            RegisterNames16b::HL => self.registers.get_hl(),
+            RegisterNames16b::SP => self.registers.sp,
+        };
+        self.flags.negative = false;
+        let old_value = self.registers.get_hl();
+        self.flags.set_half_carry_16(old_value, value);
+        (value, self.flags.carry) = old_value.overflowing_add(value);
+        self.registers.set_hl(value);
+    }
+
+    fn add_to_sp(&mut self, value: u8) {
+        self.flags.clear_flags();
+        let old_value = self.registers.sp;
+        (self.registers.sp, self.flags.carry) = self.registers.sp.overflowing_add(value as u16);
+        self.flags.set_half_carry_16(old_value, value as u16);
     }
 
     // TODO : check flags
@@ -635,31 +663,46 @@ impl Cpu<'_> {
         self.registers.pc = n;
     }
 
+    fn cpl(&mut self) {
+        self.flags.clear_flags();
+        self.registers.a = !self.registers.a;
+        self.flags.negative = true;
+        self.flags.half_carry = true;
+    }
+
     fn print_status(&mut self) {
         let opcode = self.bus.read_8(self.registers.pc) as usize;
-        if INSTRUCTION_TABLE[opcode].length == 1 {
+
+        let mut instruction = &INSTRUCTION_TABLE[opcode];
+        if instruction.name == InstructionCode::PREFIX {
+            let opcode = self.bus.read_8(self.registers.pc + 1) as usize;
+
+            instruction = &CB_INSTRUCTION_TABLE[opcode];
+        }
+
+        if instruction.length == 1 {
             println!(
                 "{:04x}  {:02x}        {:indent$}    {}   Flags:{:08b}",
                 self.registers.pc,
                 opcode,
-                INSTRUCTION_TABLE[opcode],
+                instruction,
                 self,
                 self.flags.get_flags(),
                 indent = 30
             );
-        } else if INSTRUCTION_TABLE[opcode].length == 2 {
+        } else if instruction.length == 2 {
             let imm1 = self.get_value_at(self.registers.pc + 1);
             println!(
                 "{:04x}  {:02x} {:02x}     {:indent$}    {}   Flags:{:08b}",
                 self.registers.pc,
                 opcode,
                 imm1,
-                INSTRUCTION_TABLE[opcode],
+                instruction,
                 self,
                 self.flags.get_flags(),
                 indent = 30
             );
-        } else if INSTRUCTION_TABLE[opcode].length == 3 {
+        } else if instruction.length == 3 {
             let imm1 = self.get_value_at(self.registers.pc + 1);
             let imm2 = self.get_value_at(self.registers.pc + 2);
             println!(
@@ -668,7 +711,7 @@ impl Cpu<'_> {
                 opcode,
                 imm1,
                 imm2,
-                INSTRUCTION_TABLE[opcode],
+                instruction,
                 self,
                 self.flags.get_flags(),
                 indent = 30

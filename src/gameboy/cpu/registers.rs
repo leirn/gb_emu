@@ -12,6 +12,13 @@ pub enum RegisterNames {
     IndirectHL,
 }
 
+pub enum RegisterNames16b {
+    BC,
+    DE,
+    HL,
+    SP,
+}
+
 #[derive(Default, Clone, Copy)]
 pub struct Registers {
     pub a: u8,

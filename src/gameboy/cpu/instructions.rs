@@ -1,5 +1,5 @@
 use super::cb_instructions::CB_INSTRUCTION_TABLE;
-use super::registers::RegisterNames;
+use super::registers::{RegisterNames, RegisterNames16b};
 use crate::gameboy::cpu::Cpu;
 use std::fmt;
 
@@ -13,11 +13,7 @@ pub struct Instruction {
 
 impl fmt::Display for Instruction {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if self.name == InstructionCode::PREFIX {
-            write!(f, "{}", CB_INSTRUCTION_TABLE[self.opcode as usize])
-        } else {
-            write!(f, "{}", self.name)
-        }
+        write!(f, "{}", self.name)
     }
 }
 
@@ -94,7 +90,7 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::NOP,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |_| 0,
     },
     Instruction {
         opcode: 0x01,
@@ -184,7 +180,10 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::ADD,
         length: 1,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.add_16b_register_to_hl(RegisterNames16b::BC);
+            0
+        },
     },
     Instruction {
         opcode: 0x0A,
@@ -342,7 +341,10 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::ADD,
         length: 1,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.add_16b_register_to_hl(RegisterNames16b::DE);
+            0
+        },
     },
     Instruction {
         opcode: 0x1A,
@@ -509,7 +511,10 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::ADD,
         length: 1,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.add_16b_register_to_hl(RegisterNames16b::HL);
+            0
+        },
     },
     Instruction {
         opcode: 0x2A,
@@ -567,7 +572,10 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::CPL,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.cpl();
+            0
+        },
     },
     Instruction {
         opcode: 0x30,
@@ -651,7 +659,12 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::SCF,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.flags.negative = false;
+            cpu.flags.half_carry = false;
+            cpu.flags.carry = true;
+            0
+        },
     },
     Instruction {
         opcode: 0x38,
@@ -673,7 +686,10 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::ADD,
         length: 1,
         cycles: [8, 8],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.add_16b_register_to_hl(RegisterNames16b::SP);
+            0
+        },
     },
     Instruction {
         opcode: 0x3A,
@@ -731,7 +747,12 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::CCF,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.flags.negative = false;
+            cpu.flags.half_carry = false;
+            cpu.flags.carry = !cpu.flags.carry;
+            0
+        },
     },
     Instruction {
         opcode: 0x40,
@@ -2253,7 +2274,7 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::ILLEGAL_D3,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| panic!("Illegal instruction D3"),
+        operation: |_| panic!("Illegal instruction D3"),
     },
     Instruction {
         opcode: 0xD4,
@@ -2319,7 +2340,10 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::RETI,
         length: 1,
         cycles: [16, 16],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            cpu.reti();
+            0
+        },
     },
     Instruction {
         opcode: 0xDA,
@@ -2341,7 +2365,7 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::ILLEGAL_DB,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| panic!("Illegal instruction DB"),
+        operation: |_| panic!("Illegal instruction DB"),
     },
     Instruction {
         opcode: 0xDC,
@@ -2362,7 +2386,7 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::ILLEGAL_DD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| panic!("Illegal instruction DD"),
+        operation: |_| panic!("Illegal instruction DD"),
     },
     Instruction {
         opcode: 0xDE,
@@ -2423,14 +2447,14 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::ILLEGAL_E3,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| panic!("Illegal instruction E3"),
+        operation: |_| panic!("Illegal instruction E3"),
     },
     Instruction {
         opcode: 0xE4,
         name: InstructionCode::ILLEGAL_E4,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| panic!("Illegal instruction E4"),
+        operation: |_| panic!("Illegal instruction E4"),
     },
     Instruction {
         opcode: 0xE5,
@@ -2468,7 +2492,11 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::ADD,
         length: 2,
         cycles: [16, 16],
-        operation: |_cpu| 0,
+        operation: |cpu| {
+            let value = cpu.get_immediate();
+            cpu.add_to_sp(value);
+            0
+        },
     },
     Instruction {
         opcode: 0xE9,
@@ -2497,21 +2525,21 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::ILLEGAL_EB,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| panic!("Illegal instruction EB"),
+        operation: |_| panic!("Illegal instruction EB"),
     },
     Instruction {
         opcode: 0xEC,
         name: InstructionCode::ILLEGAL_EC,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| panic!("Illegal instruction EC"),
+        operation: |_| panic!("Illegal instruction EC"),
     },
     Instruction {
         opcode: 0xED,
         name: InstructionCode::ILLEGAL_ED,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| panic!("Illegal instruction ED"),
+        operation: |_| panic!("Illegal instruction ED"),
     },
     Instruction {
         opcode: 0xEE,
@@ -2582,7 +2610,7 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::ILLEGAL_F4,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| panic!("Illegal instruction F4"),
+        operation: |_| panic!("Illegal instruction F4"),
     },
     Instruction {
         opcode: 0xF5,
@@ -2668,14 +2696,14 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         name: InstructionCode::ILLEGAL_FC,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| panic!("Illegal instruction FC"),
+        operation: |_| panic!("Illegal instruction FC"),
     },
     Instruction {
         opcode: 0xFD,
         name: InstructionCode::ILLEGAL_FD,
         length: 1,
         cycles: [4, 4],
-        operation: |_cpu| panic!("Illegal instruction FD"),
+        operation: |_| panic!("Illegal instruction FD"),
     },
     Instruction {
         opcode: 0xFE,
