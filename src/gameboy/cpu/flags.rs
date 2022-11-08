@@ -28,12 +28,12 @@ impl Flags {
         self.carry = false;
     }
 
-    pub fn set_nz(&mut self, value: u8) {
-        self.set_negative(value);
+    pub fn _set_nz(&mut self, value: u8) {
+        self._set_negative(value);
         self.set_zero(value);
     }
 
-    pub fn set_negative(&mut self, value: u8) {
+    pub fn _set_negative(&mut self, value: u8) {
         self.negative = (value >> 7) != 0;
     }
 

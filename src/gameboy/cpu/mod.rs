@@ -7,16 +7,18 @@ use crate::gameboy::bus::Bus;
 use flags::Flags;
 use instructions::INSTRUCTION_TABLE;
 use registers::Registers;
+use std::cell::RefCell;
 use std::fmt;
+use std::rc::Rc;
 
 use self::registers::RegisterNames;
 
 use super::cartridge::Cartridge;
 
-pub struct Cpu {
+pub struct Cpu<'a> {
     pub registers: Registers,
     pub flags: Flags,
-    pub bus: Bus,
+    pub bus: Bus<'a>,
     remaining_cycles: u32,
     total_cycles: u32,
     interruption_enabled: bool,
@@ -24,18 +26,18 @@ pub struct Cpu {
     switch_interruption_enabled_in: u8,
 }
 
-impl fmt::Display for Cpu {
+impl fmt::Display for Cpu<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Cycles:{},{}", self.total_cycles, self.registers)
     }
 }
 
-impl Cpu {
-    pub fn new() -> Cpu {
+impl Cpu<'_> {
+    pub fn new(sdl_context: Rc<RefCell<sdl2::Sdl>>) -> Cpu<'static> {
         Cpu {
             registers: Registers::default(),
             flags: Flags::default(),
-            bus: Bus::new(),
+            bus: Bus::new(sdl_context),
             remaining_cycles: 0,
             total_cycles: 0,
             interruption_enabled: true,
@@ -190,8 +192,6 @@ impl Cpu {
     }
 
     fn push(&mut self, value: u16) {
-        println!("Push {:04x} at {:04x}", value, self.registers.sp);
-
         self.set_value_16_at(self.registers.sp, value);
         self.registers.dec_sp();
         self.registers.dec_sp();
@@ -201,7 +201,6 @@ impl Cpu {
         self.registers.inc_sp();
         self.registers.inc_sp();
         let value = self.get_value_16_at(self.registers.sp);
-        println!("Pop {:04x} at {:04x}", value, self.registers.sp);
         value
     }
 

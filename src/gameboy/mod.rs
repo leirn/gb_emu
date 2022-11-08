@@ -3,17 +3,25 @@ mod cartridge;
 mod cpu;
 mod ppu;
 
-use cpu::Cpu;
-
 use self::cartridge::Cartridge;
+use cpu::Cpu;
+use sdl2::event::Event;
+use sdl2::keyboard::Keycode;
+use std::cell::RefCell;
+use std::rc::Rc;
 
-pub struct GameBoy {
-    cpu: Cpu,
+pub struct GameBoy<'a> {
+    cpu: Cpu<'a>,
+    sdl_context: Rc<RefCell<sdl2::Sdl>>,
 }
 
-impl GameBoy {
-    pub fn new() -> GameBoy {
-        GameBoy { cpu: Cpu::new() }
+impl GameBoy<'_> {
+    pub fn new() -> GameBoy<'static> {
+        let _sdl_context = Rc::new(RefCell::new(sdl2::init().unwrap()));
+        GameBoy {
+            cpu: Cpu::new(_sdl_context.clone()),
+            sdl_context: _sdl_context,
+        }
     }
 
     pub fn start(&mut self, rom_file: String) {
@@ -45,12 +53,37 @@ impl GameBoy {
 
         self.cpu.bus.load_boot_rom();
         self.cpu.registers.pc = 0x0000;
-        let sleep_time = std::time::Duration::from_millis(10);
-        loop {
-            self.cpu.next();
-            self.cpu.bus.ppu.next();
-            println!("{}", self.cpu.bus.ppu);
-            std::thread::sleep(sleep_time);
+        //let sleep_time = std::time::Duration::from_millis(100);
+
+        let mut running: bool = true;
+        let mut paused: bool = false;
+
+        while running {
+            // 4 cpu clock tick per ppu clock tick ?
+            if !paused {
+                self.cpu.next();
+                self.cpu.next();
+                self.cpu.next();
+                self.cpu.next();
+                self.cpu.bus.ppu.next();
+                //println!("{}", self.cpu.bus.ppu);
+                //std::thread::sleep(sleep_time);
+            }
+            let mut event_pump = self.sdl_context.borrow_mut().event_pump().unwrap();
+            for event in event_pump.poll_iter() {
+                match event {
+                    Event::Quit { .. }
+                    | Event::KeyDown {
+                        keycode: Some(Keycode::Q),
+                        ..
+                    } => running = false,
+                    Event::KeyDown {
+                        keycode: Some(Keycode::P),
+                        ..
+                    } => paused = !paused,
+                    _ => (),
+                }
+            }
         }
     }
 }

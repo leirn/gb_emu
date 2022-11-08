@@ -21,23 +21,25 @@ const BOOT_SEQUENCE: [u8; BOOT_SEQUENCE_SIZE] = [
 use crate::gameboy::ppu::{Ppu, OAM_SIZE};
 
 use super::cartridge::Cartridge;
+use std::cell::RefCell;
+use std::rc::Rc;
 
 const RAM_SIZE: usize = 0x2000;
 const HIRAM_SIZE: usize = 0x80;
 
-pub struct Bus {
+pub struct Bus<'a> {
     ram: [u8; RAM_SIZE],
-    pub ppu: Ppu,
+    pub ppu: Ppu<'a>,
     cartridge: Cartridge,
     hiram: [u8; HIRAM_SIZE],
     interrupt_enabled: u8,
     boot_rom_enabled: u8,
 }
 
-impl Bus {
-    pub fn new() -> Bus {
+impl Bus<'_> {
+    pub fn new(sdl_context: Rc<RefCell<sdl2::Sdl>>) -> Bus<'static> {
         Bus {
-            ppu: Ppu::new(),
+            ppu: Ppu::new(sdl_context),
             ram: [(); RAM_SIZE].map(|_| 0),
             cartridge: Cartridge::new(),
             hiram: [0; HIRAM_SIZE],

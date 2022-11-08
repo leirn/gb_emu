@@ -1,19 +1,18 @@
 // http://blog.kevtris.org/blogfiles/Nitty%20Gritty%20Gameboy%20VRAM%20Timing.txt
 // http://bgb.bircd.org/pandocs.htm#videodisplay
+// https://blog.tigris.fr/2019/09/15/writing-an-emulator-the-first-pixel/
 
-use std::fmt;
+mod screen;
 
-const NINTENDO_LOGO_SIZE: usize = 0x30;
-
-const NINTENDO_LOGO: [u8; NINTENDO_LOGO_SIZE] = [
-    0xCE, 0xED, 0x66, 0x66, 0xCC, 0x0D, 0x00, 0x0B, 0x03, 0x73, 0x00, 0x83, 0x00, 0x0C, 0x00, 0x0D,
-    0x00, 0x08, 0x11, 0x1F, 0x88, 0x89, 0x00, 0x0E, 0xDC, 0xCC, 0x6E, 0xE6, 0xDD, 0xDD, 0xD9, 0x99,
-    0xBB, 0xBB, 0x67, 0x63, 0x6E, 0x0E, 0xEC, 0xCC, 0xDD, 0xDC, 0x99, 0x9F, 0xBB, 0xB9, 0x33, 0x3E,
-];
+use screen::{Screen, SCREEN_HEIGHT, SCREEN_WIDTH};
+use std::cell::RefCell;
+use std::collections::VecDeque;
+use std::rc::Rc;
+use std::{fmt, u16};
 
 const VRAM_SIZE: usize = 0x2000;
 pub const OAM_SIZE: usize = 0x9f;
-
+const TILE_SIZE: u16 = 16;
 enum SpriteSize {
     Size8x8,
     Size8x16,
@@ -27,18 +26,42 @@ enum State {
     VBlank,
 }
 
+#[derive(Default)]
+enum FetcherState {
+    #[default]
+    ReadTileID,
+    ReadTileData0,
+    ReadTileData1,
+    PushToFIFO,
+}
+
 impl fmt::Display for State {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:?}", self)
     }
 }
 
-pub struct Ppu {
+#[derive(Default)]
+struct PixelFetcher {
+    tick: u16,
+    state: FetcherState,
+    tile_index: u8,
+    map_addr: u16,
+    tile_line: u8,
+    tile_id: u8,
+    pixel_data: [u8; 8],
+    fifo: VecDeque<u8>,
+}
+
+pub struct Ppu<'a> {
+    screen: Screen<'a>,
     vram: [u8; VRAM_SIZE],
     oam: [u8; OAM_SIZE],
+    tick: u16,
     x: u8,
     y: u8,
     state: State,
+    fetcher: PixelFetcher,
     /// Bit 7 - LCD Display Enable             (0=Off, 1=On)
     /// Bit 6 - Window Tile Map Display Select (0=9800-9BFF, 1=9C00-9FFF)
     /// Bit 5 - Window Display Enable          (0=Off, 1=On)
@@ -59,17 +82,20 @@ pub struct Ppu {
     window_x_position_minus_7: u8,
 }
 
-impl fmt::Display for Ppu {
+impl fmt::Display for Ppu<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "X:{}, Y:{}, state:{}", self.x, self.y, self.state)
     }
 }
 
-impl Ppu {
-    pub fn new() -> Ppu {
-        Ppu {
+impl Ppu<'_> {
+    pub fn new(sdl_context: Rc<RefCell<sdl2::Sdl>>) -> Ppu<'static> {
+        let mut ppu = Ppu {
+            screen: Screen::new(sdl_context),
             vram: [(); VRAM_SIZE].map(|_| 0),
             oam: [0; OAM_SIZE],
+            tick: 0,
+            fetcher: PixelFetcher::default(),
             x: 0,
             y: 0,
             state: State::OAMSearch,
@@ -83,26 +109,153 @@ impl Ppu {
             object_palette_1_data: 0,
             window_y_position: 0,
             window_x_position_minus_7: 0,
+        };
+        ppu.screen.start();
+        ppu
+    }
+
+    // https://blog.tigris.fr/2019/09/15/writing-an-emulator-the-first-pixel/
+    pub fn next(&mut self) {
+        self.tick += 1;
+
+        match self.state {
+            State::OAMSearch => {
+                if self.tick == 40 {
+                    self.state = State::PixelTransfer;
+                    self.x = 0;
+                    let tile_line = self.y % 8;
+                    let tile_map_base_addr = self.get_bg_tile_map_display_selected();
+                    let tile_map_row_addr = tile_map_base_addr + ((self.y as u16 / 8) * 32);
+                    self.fetcher_start(tile_map_row_addr, tile_line);
+                }
+            }
+            State::PixelTransfer => {
+                self.fetcher_next();
+
+                if self.fetcher.fifo.len() > 0 {
+                    let pixel_color = self.fetcher.fifo.pop_front().unwrap();
+                    self.screen.set_pixel(self.x, self.y, pixel_color);
+                    self.x += 1;
+                }
+                if self.x == 160 {
+                    self.state = State::HBlank;
+                }
+            }
+            State::HBlank => {
+                if self.tick == 456 {
+                    self.y += 1;
+                    self.tick = 0;
+                    if self.y == 144 {
+                        self.state = State::VBlank;
+                    } else {
+                        self.state = State::OAMSearch;
+                    }
+                }
+            }
+            State::VBlank => {
+                if self.tick == 456 {
+                    self.y += 1;
+                    self.tick = 0;
+                }
+                if self.y == 153 {
+                    self.state = State::OAMSearch;
+                    self.y = 0;
+                    println!("Updating screen");
+                    self.display_background_map();
+                    self.screen.present(self.scroll_x, self.scroll_y);
+                }
+            }
         }
     }
 
-    pub fn next(&mut self) {
-        // TODO : compare LY and LYC?
+    fn fetcher_start(&mut self, map_addr: u16, tile_line: u8) {
+        self.fetcher.tile_index = 0;
+        self.fetcher.map_addr = map_addr;
+        self.fetcher.tile_line = tile_line;
+        self.fetcher.tick = 0;
+        self.fetcher.state = FetcherState::ReadTileID;
+        self.fetcher.fifo.clear();
+    }
 
-        self.x += 1;
-        if self.x == 160 {
-            self.x = 0;
-            self.y += 1;
-            if self.y == 144 {
-                self.state = State::VBlank;
-            } else if self.y == 153 {
-                self.y = 0;
-                self.state = State::OAMSearch
+    fn fetcher_next(&mut self) {
+        // The Fetcher runs at half the speed of the PPU (every 2 clock cycles).
+        self.fetcher.tick += 1;
+        if self.fetcher.tick < 2 {
+            return;
+        }
+        self.fetcher.tick = 0; // Reset tick counter and execute next state.
+
+        match self.fetcher.state {
+            FetcherState::ReadTileID => {
+                self.fetcher.tile_id =
+                    self.vram[self.fetcher.map_addr as usize + self.fetcher.tile_index as usize];
+                self.fetcher.state = FetcherState::ReadTileData0;
             }
-        } else if self.x == 20 && self.state == State::OAMSearch {
-            self.state = State::PixelTransfer;
-        } else if self.x == 20 && self.state == State::PixelTransfer {
-            self.state = State::HBlank;
+
+            FetcherState::ReadTileData0 => {
+                let offset = self.get_bg_and_window_tile_data_selected()
+                    + self.fetcher.tile_id as u16 * TILE_SIZE;
+
+                let addr = offset + self.fetcher.tile_line as u16 * 2;
+
+                let data = self.vram[addr as usize];
+
+                for bitpos in 0..8 {
+                    self.fetcher.pixel_data[bitpos] = (data >> bitpos) & 0x01;
+                }
+
+                self.fetcher.state = FetcherState::ReadTileData1;
+            }
+
+            FetcherState::ReadTileData1 => {
+                let offset = self.get_bg_and_window_tile_data_selected()
+                    + self.fetcher.tile_id as u16 * TILE_SIZE;
+
+                let addr = offset + self.fetcher.tile_line as u16 * 2;
+
+                let data = self.vram[addr as usize + 1];
+
+                for bitpos in 0..8 {
+                    self.fetcher.pixel_data[bitpos] = (data >> bitpos) & 0x01;
+                }
+                self.fetcher.state = FetcherState::PushToFIFO;
+            }
+
+            FetcherState::PushToFIFO => {
+                for i in 0..8 {
+                    self.fetcher.fifo.push_back(self.fetcher.pixel_data[7 - i]);
+                }
+                self.fetcher.tile_index += 1;
+                self.fetcher.state = FetcherState::ReadTileID;
+            }
+        }
+    }
+
+    fn display_background_map(&mut self) {
+        let base_address = self.get_bg_tile_map_display_selected() as usize;
+
+        for y in 0..32 {
+            for x in 0..32 {
+                let tile_number = self.vram[base_address + 32 * y + x] as usize;
+                let tile_data_base_address = self.get_bg_and_window_tile_data_selected() as usize;
+                let tile_data_address = tile_data_base_address + 16 * tile_number;
+                for x_tile in 0..2 {
+                    for y_tile in 0..8 {
+                        // let go trough tile
+                        let byte = self.vram[tile_data_address + y_tile * 2 + x_tile];
+                        for j in 0..4 {
+                            // let go trough bit pairs in byte
+                            let color = (byte >> ((j * 4) * 2)) & 0x03;
+
+                            let x_pos = x * 8 + x_tile * 2 + j;
+                            let y_pos = y * 8 + y_tile;
+
+                            self.screen
+                                .set_pixel(x_pos as u8, y_pos as u8, (color % 4) as u8);
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -185,9 +338,9 @@ impl Ppu {
 
     fn get_window_tile_map_display_selected(&self) -> u16 {
         if (self.lcd_control >> 6) & 0x1 == 0x1 {
-            0x9c00
+            0x9c00 - 0x8000 // VRAM Offset substracted
         } else {
-            0x9800
+            0x9800 - 0x8000 // VRAM Offset substracted
         }
     }
 
@@ -195,19 +348,19 @@ impl Ppu {
         (self.lcd_control >> 5) & 0x1 == 0x1
     }
 
-    fn get_bg_and_window_tile_dara_selected(&self) -> u16 {
+    fn get_bg_and_window_tile_data_selected(&self) -> u16 {
         if (self.lcd_control >> 4) & 0x1 == 0x1 {
-            0x8000
+            0x8000 - 0x8000 // VRAM Offset substracted
         } else {
-            0x8800
+            0x8800 - 0x8000 // VRAM Offset substracted
         }
     }
 
     fn get_bg_tile_map_display_selected(&self) -> u16 {
         if (self.lcd_control >> 3) & 0x1 == 0x1 {
-            0x9c00
+            0x9c00 - 0x8000 // VRAM Offset substracted
         } else {
-            0x9800
+            0x9800 - 0x8000 // VRAM Offset substracted
         }
     }
 

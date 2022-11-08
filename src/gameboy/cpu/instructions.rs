@@ -21,6 +21,7 @@ impl fmt::Display for Instruction {
     }
 }
 
+#[allow(non_camel_case_types)]
 #[derive(PartialEq, Debug)]
 pub enum InstructionCode {
     NOP,
