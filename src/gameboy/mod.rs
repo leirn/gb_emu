@@ -141,23 +141,23 @@ impl GameBoy<'_> {
         }
     }
 
-    fn handle_controller_event_up(&mut self, keycode: Keycode) {
-        self.cpu.is_halted = false;
+    fn handle_controller_event_down(&mut self, keycode: Keycode) {
         match keycode {
-            Keycode::Up => self.cpu.bus.controller.up = true,
-            Keycode::Down => self.cpu.bus.controller.down = true,
-            Keycode::Left => self.cpu.bus.controller.left = true,
-            Keycode::Right => self.cpu.bus.controller.right = true,
+            Keycode::Up => self.cpu.bus.controller.press_up(),
+            Keycode::Down => self.cpu.bus.controller.press_down(),
+            Keycode::Left => self.cpu.bus.controller.press_left(),
+            Keycode::Right => self.cpu.bus.controller.press_right(),
             _ => (),
         }
     }
 
-    fn handle_controller_event_down(&mut self, keycode: Keycode) {
+    fn handle_controller_event_up(&mut self, keycode: Keycode) {
+        self.cpu.is_halted = false;
         match keycode {
-            Keycode::Up => self.cpu.bus.controller.up = false,
-            Keycode::Down => self.cpu.bus.controller.down = false,
-            Keycode::Left => self.cpu.bus.controller.left = false,
-            Keycode::Right => self.cpu.bus.controller.right = false,
+            Keycode::Up => self.cpu.bus.controller.unpress_up(),
+            Keycode::Down => self.cpu.bus.controller.unpress_down(),
+            Keycode::Left => self.cpu.bus.controller.unpress_left(),
+            Keycode::Right => self.cpu.bus.controller.unpress_right(),
             _ => (),
         }
     }
