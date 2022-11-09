@@ -311,7 +311,7 @@ impl Cpu<'_> {
         self.flags.clear_flags();
 
         self.flags.carry = value >> 7 == 0x1;
-        value = ((carry as u8) << 7) | (value & 0x7f);
+        value = (carry as u8) | (value << 1);
 
         value = value.rotate_left(1);
         self.flags.set_zero(value);
@@ -341,7 +341,7 @@ impl Cpu<'_> {
             RegisterNames::IndirectHL => self.get_value_at(self.registers.get_hl()),
         };
         self.flags.clear_flags();
-        self.flags.carry = (value) & 0x1 == 0x1;
+        self.flags.carry = value & 0x1 == 0x1;
         value = value.rotate_right(1);
         self.flags.set_zero(value);
         match register {
@@ -373,7 +373,7 @@ impl Cpu<'_> {
         self.flags.clear_flags();
 
         self.flags.carry = value & 0x1 == 0x1;
-        value = (carry as u8) | (value & 0xfe);
+        value = ((carry as u8) << 7) | (value >> 1);
 
         value = value.rotate_right(1);
         self.flags.set_zero(value);
