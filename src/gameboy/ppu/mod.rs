@@ -80,6 +80,8 @@ pub struct Ppu<'a> {
     object_palette_1_data: u8,
     window_y_position: u8,
     window_x_position_minus_7: u8,
+    v_blank_interrupt: bool,
+    stat_interrupt: bool,
 }
 
 impl fmt::Display for Ppu<'_> {
@@ -109,9 +111,23 @@ impl Ppu<'_> {
             object_palette_1_data: 0,
             window_y_position: 0,
             window_x_position_minus_7: 0,
+            v_blank_interrupt: false,
+            stat_interrupt: false,
         };
         ppu.screen.start();
         ppu
+    }
+
+    pub fn is_vblank_interrupted(&mut self) -> bool {
+        let value = self.v_blank_interrupt;
+        self.v_blank_interrupt = false;
+        value
+    }
+
+    pub fn is_stat_interrupted(&mut self) -> bool {
+        let value = self.stat_interrupt;
+        self.stat_interrupt = false;
+        value
     }
 
     // https://blog.tigris.fr/2019/09/15/writing-an-emulator-the-first-pixel/
@@ -147,6 +163,7 @@ impl Ppu<'_> {
                     self.tick = 0;
                     if self.y == 144 {
                         self.state = State::VBlank;
+                        self.v_blank_interrupt = true;
                     } else {
                         self.state = State::OAMSearch;
                     }
@@ -279,8 +296,8 @@ impl Ppu<'_> {
         match address {
             0xff40 => self.lcd_control,
             0xff41 => self.lcd_status,
-            0xff42 => self.scroll_x,
-            0xff43 => self.scroll_y,
+            0xff42 => self.scroll_y,
+            0xff43 => self.scroll_x,
             0xff44 => self.y,
             0xff45 => self.lyc,
             0xff47 => self.bg_palette_data,
@@ -299,8 +316,8 @@ impl Ppu<'_> {
                 self.lcd_status =
                     (value & 0xfb) | (self.get_lyc_ly_coincidence() as u8) << 2 | self.get_state()
             }
-            0xff42 => self.scroll_x = value,
-            0xff43 => self.scroll_y = value,
+            0xff42 => self.scroll_y = value,
+            0xff43 => self.scroll_x = value,
             0xff45 => self.lyc = value,
             0xff47 => self.bg_palette_data = value,
             0xff48 => self.object_palette_0_data = value,

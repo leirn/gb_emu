@@ -74,7 +74,9 @@ impl GameBoy<'_> {
                 }
                 self.cpu.bus.ppu.next();
                 //println!("{}", self.cpu.bus.ppu);
-                std::thread::sleep(sleep_time);
+                if false && self.cpu.registers.pc == 0x64 {
+                    std::thread::sleep(sleep_time);
+                }
             }
 
             self.event_handler();
@@ -149,19 +151,19 @@ impl GameBoy<'_> {
                     keycode: Some(Keycode::Right),
                     ..
                 }
-                | Event::KeyDown {
+                | Event::KeyUp {
                     keycode: Some(Keycode::LCtrl),
                     ..
                 }
-                | Event::KeyDown {
+                | Event::KeyUp {
                     keycode: Some(Keycode::Space),
                     ..
                 }
-                | Event::KeyDown {
+                | Event::KeyUp {
                     keycode: Some(Keycode::Backspace),
                     ..
                 }
-                | Event::KeyDown {
+                | Event::KeyUp {
                     keycode: Some(Keycode::Return),
                     ..
                 } => {

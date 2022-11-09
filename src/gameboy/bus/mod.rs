@@ -130,6 +130,7 @@ impl Bus<'_> {
             0xff05 => self.timer.set_tima(value),                   // time and divider
             0xff06 => self.timer.set_tma(value),                    // time and divider
             0xff07 => self.timer.set_tac(value),                    // time and divider
+            0xff0f => (),                                           // request interrupt
             0xff10..=0xff26 => (),                                  // audio
             0xff30..=0xff3f => (),                                  // wave pattern
             0xff40..=0xff45 => self.ppu.write_registers(address, value), // lcd
@@ -155,5 +156,25 @@ impl Bus<'_> {
     pub fn write_16(&mut self, address: u16, value: u16) {
         self.write_8(address + 1, (value >> 8) as u8);
         self.write_8(address, (value & 0xff) as u8);
+    }
+
+    pub fn is_vblank_interrup_enabled(&mut self) -> bool {
+        self.interrupt_enabled & 1 == 1
+    }
+
+    pub fn is_stat_interrup_enabled(&mut self) -> bool {
+        (self.interrupt_enabled >> 1) & 1 == 1
+    }
+
+    pub fn is_time_interrup_enabled(&mut self) -> bool {
+        (self.interrupt_enabled >> 2) & 1 == 1
+    }
+
+    pub fn is_serial_interrup_enabled(&mut self) -> bool {
+        (self.interrupt_enabled >> 3) & 1 == 1
+    }
+
+    pub fn is_joypad_interrup_enabled(&mut self) -> bool {
+        (self.interrupt_enabled >> 4) & 1 == 1
     }
 }

@@ -42,6 +42,10 @@ impl Timer {
         self.time_enable = value >> 2 & 0x1 == 0x1;
         self.clock_mode = value & 0x3;
     }
+
+    pub fn is_interrupted(&mut self) -> bool {
+        false
+    }
 }
 
 const CLOCK_SELECT: InputClockSelect = [1024, 16, 64, 256];

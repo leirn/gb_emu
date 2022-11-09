@@ -72,12 +72,18 @@ impl Cpu<'_> {
             }
         }
 
+        if self.interruption_enabled {
+            if self.check_interrupt() {
+                return;
+            }
+        }
+
         if self.remaining_cycles > 0 {
             self.remaining_cycles -= 1;
             return;
         }
 
-        self.print_status();
+        // self.print_status();
         let opcode = self.get_immediate() as usize;
 
         let instruction_result = (&INSTRUCTION_TABLE[opcode].operation)(self);
@@ -85,6 +91,27 @@ impl Cpu<'_> {
         self.remaining_cycles = INSTRUCTION_TABLE[opcode].cycles[instruction_result];
         self.total_cycles += self.remaining_cycles;
         self.remaining_cycles -= 1; // Do not count current cycle twice
+    }
+
+    fn check_interrupt(&mut self) -> bool {
+        if self.bus.is_vblank_interrup_enabled() && self.bus.ppu.is_vblank_interrupted() {
+            self.call(INTERRUPT_ADDRESS_VBLANK);
+            true
+        } else if self.bus.is_stat_interrup_enabled() && self.bus.ppu.is_stat_interrupted() {
+            self.call(INTERRUPT_ADDRESS_STAT);
+            true
+        } else if self.bus.is_time_interrup_enabled() && self.bus.timer.is_interrupted() {
+            self.call(INTERRUPT_ADDRESS_TIMER);
+            true
+        } else if self.bus.is_serial_interrup_enabled() && self.bus.controller.is_interrupted() {
+            self.call(INTERRUPT_ADDRESS_SERIAL);
+            true
+        } else if self.bus.is_joypad_interrup_enabled() && self.bus.controller.is_interrupted() {
+            self.call(INTERRUPT_ADDRESS_JOYPAD);
+            true
+        } else {
+            false
+        }
     }
 
     /// Get 8 bit immediate value on PC and increment PC of 1
@@ -135,7 +162,6 @@ impl Cpu<'_> {
     }
 
     fn call(&mut self, address: u16) {
-        println!("Call to {}", address);
         self.push(self.registers.pc + 3);
         self.registers.pc = address;
     }
