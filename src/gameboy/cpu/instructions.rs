@@ -392,7 +392,7 @@ pub const INSTRUCTION_TABLE: [Instruction; 0x100] = [
         length: 2,
         cycles: [8, 8],
         operation: |cpu| {
-            cpu.registers.d = cpu.get_immediate();
+            cpu.registers.e = cpu.get_immediate();
             0
         },
     },
