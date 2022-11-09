@@ -83,7 +83,6 @@ impl Cpu<'_> {
             return;
         }
 
-        // self.print_status();
         let opcode = self.get_immediate() as usize;
 
         let instruction_result = (&INSTRUCTION_TABLE[opcode].operation)(self);
@@ -708,7 +707,7 @@ impl Cpu<'_> {
         self.is_halted = true;
     }
 
-    fn print_status(&mut self) {
+    pub fn print_status(&mut self) {
         let opcode = self.bus.read_8(self.registers.pc) as usize;
 
         let mut instruction = &INSTRUCTION_TABLE[opcode];

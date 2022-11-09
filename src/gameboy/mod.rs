@@ -73,6 +73,7 @@ impl GameBoy<'_> {
                     self.cpu.next();
                 }
                 self.cpu.bus.ppu.next();
+                self.cpu.print_status();
                 //println!("{}", self.cpu.bus.ppu);
                 if false && self.cpu.registers.pc == 0x64 {
                     std::thread::sleep(sleep_time);
