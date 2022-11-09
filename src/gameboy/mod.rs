@@ -109,6 +109,22 @@ impl GameBoy<'_> {
                 | Event::KeyDown {
                     keycode: Some(Keycode::Right),
                     ..
+                }
+                | Event::KeyDown {
+                    keycode: Some(Keycode::LCtrl),
+                    ..
+                }
+                | Event::KeyDown {
+                    keycode: Some(Keycode::Space),
+                    ..
+                }
+                | Event::KeyDown {
+                    keycode: Some(Keycode::Backspace),
+                    ..
+                }
+                | Event::KeyDown {
+                    keycode: Some(Keycode::Return),
+                    ..
                 } => {
                     let keycode = match event {
                         Event::KeyDown { keycode, .. } => keycode,
@@ -132,6 +148,22 @@ impl GameBoy<'_> {
                 | Event::KeyUp {
                     keycode: Some(Keycode::Right),
                     ..
+                }
+                | Event::KeyDown {
+                    keycode: Some(Keycode::LCtrl),
+                    ..
+                }
+                | Event::KeyDown {
+                    keycode: Some(Keycode::Space),
+                    ..
+                }
+                | Event::KeyDown {
+                    keycode: Some(Keycode::Backspace),
+                    ..
+                }
+                | Event::KeyDown {
+                    keycode: Some(Keycode::Return),
+                    ..
                 } => {
                     let keycode = match event {
                         Event::KeyUp { keycode, .. } => keycode,
@@ -151,6 +183,10 @@ impl GameBoy<'_> {
             Keycode::Down => self.cpu.bus.controller.press_down(),
             Keycode::Left => self.cpu.bus.controller.press_left(),
             Keycode::Right => self.cpu.bus.controller.press_right(),
+            Keycode::LCtrl => self.cpu.bus.controller.press_a(),
+            Keycode::Space => self.cpu.bus.controller.press_b(),
+            Keycode::Return => self.cpu.bus.controller.press_start(),
+            Keycode::Backspace => self.cpu.bus.controller.press_select(),
             _ => (),
         }
     }
@@ -162,6 +198,10 @@ impl GameBoy<'_> {
             Keycode::Down => self.cpu.bus.controller.unpress_down(),
             Keycode::Left => self.cpu.bus.controller.unpress_left(),
             Keycode::Right => self.cpu.bus.controller.unpress_right(),
+            Keycode::LCtrl => self.cpu.bus.controller.unpress_a(),
+            Keycode::Space => self.cpu.bus.controller.unpress_b(),
+            Keycode::Return => self.cpu.bus.controller.unpress_start(),
+            Keycode::Backspace => self.cpu.bus.controller.unpress_select(),
             _ => (),
         }
     }
